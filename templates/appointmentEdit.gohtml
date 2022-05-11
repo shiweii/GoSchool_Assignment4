@@ -46,7 +46,7 @@
     {{$appointment := .Appointment}}
     {{$date := .SelectedDate}}
     {{range $key, $val := .DentistsSession}}
-        <a href="/appointment_edit_confirm?{{(printf "id=%v&dentist=%v&date=%v&session=%v" $appointment.ID $selDentist $date $val.Num) | urlEncode}}" class="list-group-item list-group-item-action {{if not $val.Available}}disabled{{end}}">{{$date | formatDate}} ({{$date | getDay}}) | Session {{$val.Num}} | {{$val.StartTime}} - {{$val.EndTime}} {{if not $val.Available}}(Not Available){{end}}</a>
+        <a href="/appointment/edit/{{$appointment.ID}}/{{$selDentist}}/{{$date}}/{{$val.Num}}" class="list-group-item list-group-item-action {{if not $val.Available}}disabled{{end}}">{{$date | formatDate}} ({{$date | getDay}}) | Session {{$val.Num}} | {{$val.StartTime}} - {{$val.EndTime}} {{if not $val.Available}}(Not Available){{end}}</a>
     {{end}}
 </div>
 

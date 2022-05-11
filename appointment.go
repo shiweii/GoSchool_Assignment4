@@ -9,11 +9,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"reflect"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type Appointment struct {
@@ -297,7 +298,8 @@ func appointmentCreatePart2Handler(userList, appointmentSessionList **dll.Doubly
 		}
 
 		// Get data from query string
-		dentistReq := req.FormValue("dentist")
+		vars := mux.Vars(req)
+		dentistReq := vars["dentist"]
 		dentist := (**userList).FindByUsername(dentistReq)
 
 		if dentist != nil {
@@ -334,12 +336,11 @@ func appointmentCreateConfirmHandler(userList, appointmentSessionList **dll.Doub
 			return
 		}
 
-		// Decode and retrive URL query string
-		decodedUrl, _ := url.QueryUnescape(req.URL.RawQuery)
-		paramValue, _ := url.ParseQuery(decodedUrl)
-		dentistReq := paramValue["dentist"][0]
-		dateReq := paramValue["date"][0]
-		sessionReq := paramValue["session"][0]
+		// Get data from query string
+		vars := mux.Vars(req)
+		dentistReq := vars["dentist"]
+		dateReq := vars["date"]
+		sessionReq := vars["session"]
 
 		// Data conversion
 		appointmentDate, err := time.Parse("2006-01-02", dateReq)
@@ -424,7 +425,8 @@ func appointmentEditHandler(userList, appointmentSessionList **dll.DoublyLinkedl
 
 		var sessionList []AppointmentSession
 		dt := time.Now()
-		appointmentReq := req.FormValue("id")
+		vars := mux.Vars(req)
+		appointmentReq := vars["id"]
 		appointmentID, _ := strconv.Atoi(appointmentReq)
 		appointment := (**appointmentTree).GetAppointmentByID(appointmentID)
 		sessions := (**appointmentSessionList).GetList()
@@ -500,12 +502,11 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 		}
 
 		// Decode and retrive URL query string
-		decodedUrl, _ := url.QueryUnescape(req.URL.RawQuery)
-		paramValue, _ := url.ParseQuery(decodedUrl)
-		appointmentReq := paramValue["id"][0]
-		dentistReq := paramValue["dentist"][0]
-		dateReq := paramValue["date"][0]
-		sessionReq := paramValue["session"][0]
+		vars := mux.Vars(req)
+		appointmentReq := vars["id"]
+		dentistReq := vars["dentist"]
+		dateReq := vars["date"]
+		sessionReq := vars["session"]
 
 		// Date conversion
 		appointmentID, _ := strconv.Atoi(appointmentReq)
@@ -593,7 +594,8 @@ func appointmentDeleteHandler(userList, appointmentSessionList **dll.DoublyLinke
 			return
 		}
 
-		appointmentReq := req.FormValue("id")
+		vars := mux.Vars(req)
+		appointmentReq := vars["id"]
 		appointmentID, _ := strconv.Atoi(appointmentReq)
 		appointment := (**appointmentTree).GetAppointmentByID(appointmentID)
 		sessions := (**appointmentSessionList).GetList()

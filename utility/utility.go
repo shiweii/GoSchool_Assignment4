@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -119,14 +118,4 @@ func GetDay(x string) string {
 		return td.Weekday().String()
 	}
 	return ""
-}
-
-func UrlEncode(x string) string {
-	params := url.Values{}
-	ret := strings.Split(x, "&")
-	for _, v := range ret {
-		ret := strings.Split(v, "=")
-		params.Add(ret[0], ret[1])
-	}
-	return params.Encode()
 }

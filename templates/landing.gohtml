@@ -9,7 +9,7 @@
 {{ end }}
 
 {{ if eq .Role "admin" }}
-<h2><a href="/appointments_search">Search Available Appointment</a></h2>
+<h2><a href="/appointments/search">Search Available Appointment</a></h2>
 <h2><a href="/appointments">Manage Appointment</a></h2>
 <h2><a href="/sessions">Manage Sessions</a></h2>
 <h2><a href="/users">Manage Users</a></h2>
@@ -17,9 +17,9 @@
 
 {{ if eq .Role "patient" }}
 <h2><a href="/appointments">Manage Appointment</a></h2>
-<h2><a href="/appointment_create">Create New Appointment</a></h2>
-<h2><a href="/appointments_search">Search Available Appointment</a></h2>
-<h2><a href="/user_edit?username={{.Username}}">Edit Info</a></h2>
+<h2><a href="/appointment/create">Create New Appointment</a></h2>
+<h2><a href="/appointments/search">Search Available Appointment</a></h2>
+<h2><a href="/user/edit/{{.Username}}">Edit Info</a></h2>
 {{ end }}
 
 <h2><a href="/logout">Log Out</a></h2>

@@ -43,7 +43,7 @@
                     {{end}}
                     <td>{{$val.Role | firstCharToUpper}}</td>
                     <td {{if .IsDeleted}}class="text-danger"{{end}}>{{if .IsDeleted}}Deleted{{end}}</td>
-                    <td><a class="btn btn-primary {{if eq $val.Role "admin"}}disabled{{end}}" href="/user_edit?username={{$val.Username}}" role="button">Edit</a>{{if not .IsDeleted}}&nbsp;&nbsp;<a class="btn btn-danger {{if eq $val.Role "admin"}}disabled{{end}}" href="/user_delete?username={{$val.Username}}" role="button">Delete</a>{{end}}</td>
+                    <td><a class="btn btn-primary {{if eq $val.Role "admin"}}disabled{{end}}" href="/user/edit/{{$val.Username}}" role="button">Edit</a>{{if not .IsDeleted}}&nbsp;&nbsp;<a class="btn btn-danger {{if eq $val.Role "admin"}}disabled{{end}}" href="/user/delete/{{$val.Username}}" role="button">Delete</a>{{end}}</td>
                 </tr>
             {{end}}
         </tbody>

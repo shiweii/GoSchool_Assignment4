@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/gorilla/mux"
 )
 
 var (
@@ -18,7 +20,6 @@ var (
 		"getDay":           util.GetDay,
 		"formatDate":       util.FormatDate,
 		"firstCharToUpper": util.FirstCharToUpper,
-		"urlEncode":        util.UrlEncode,
 	}
 )
 
@@ -58,35 +59,35 @@ func main() {
 		appointmentTree.Add(v.ID, v.Date, v.Session, dentist, patient)
 	}
 
+	router := mux.NewRouter()
+
 	// Handler functions
-	http.HandleFunc("/", indexHandler(&userList))
-	http.HandleFunc("/signup", signupHandler(&userList))
-	http.HandleFunc("/login", loginHandler(&userList))
-	http.HandleFunc("/logout", logoutHandler(&userList))
-	http.HandleFunc("/landing", landingHandler(&userList))
-	http.Handle("/favicon.ico", http.NotFoundHandler())
+	router.HandleFunc("/", indexHandler(&userList))
+	router.HandleFunc("/signup", signupHandler(&userList))
+	router.HandleFunc("/login", loginHandler(&userList))
+	router.HandleFunc("/logout", logoutHandler(&userList))
+	router.HandleFunc("/landing", landingHandler(&userList))
+	router.Handle("/favicon.ico", http.NotFoundHandler())
 
 	// Appointment
-	http.HandleFunc("/appointments", appointmentListHandler(&userList, &appointmentSessionList, &appointmentTree))
-	http.HandleFunc("/appointment_create", appointmentCreateHandler(&userList))
-	http.HandleFunc("/appointment_create_2", appointmentCreatePart2Handler(&userList, &appointmentSessionList, &appointmentTree))
-	http.HandleFunc("/appointment_create_confirm", appointmentCreateConfirmHandler(&userList, &appointmentSessionList, &appointmentTree))
-	http.HandleFunc("/appointment_edit", appointmentEditHandler(&userList, &appointmentSessionList, &appointmentTree))
-	http.HandleFunc("/appointment_edit_confirm", appointmentEditConfirmHandler(&userList, &appointmentSessionList, &appointmentTree))
-	http.HandleFunc("/appointment_delete", appointmentDeleteHandler(&userList, &appointmentSessionList, &appointmentTree))
-	http.HandleFunc("/appointments_search", appointmentSearchHandler(&userList, &appointmentSessionList, &appointmentTree))
+	router.HandleFunc("/appointments", appointmentListHandler(&userList, &appointmentSessionList, &appointmentTree))
+	router.HandleFunc("/appointments/search", appointmentSearchHandler(&userList, &appointmentSessionList, &appointmentTree))
+	router.HandleFunc("/appointment/create", appointmentCreateHandler(&userList))
+	router.HandleFunc("/appointment/create/{dentist}", appointmentCreatePart2Handler(&userList, &appointmentSessionList, &appointmentTree))
+	router.HandleFunc(`/appointment/create/{dentist}/{date:\d{4}-\d{2}-\d{2}}/{session:[0-9]+}`, appointmentCreateConfirmHandler(&userList, &appointmentSessionList, &appointmentTree))
+	router.HandleFunc("/appointment/edit/{id:[0-9]+}", appointmentEditHandler(&userList, &appointmentSessionList, &appointmentTree))
+	router.HandleFunc(`/appointment/edit/{id:[0-9]+}/{dentist}/{date:\d{4}-\d{2}-\d{2}}/{session:[0-9]+}`, appointmentEditConfirmHandler(&userList, &appointmentSessionList, &appointmentTree))
+	router.HandleFunc("/appointment/delete/{id:[0-9]+}", appointmentDeleteHandler(&userList, &appointmentSessionList, &appointmentTree))
 
 	// User
-	http.HandleFunc("/users", usersHandler(&userList))
-	http.HandleFunc("/user_edit", userEditHandler(&userList))
-	http.HandleFunc("/user_delete", userDeleteHandler(&userList))
+	router.HandleFunc("/users", usersHandler(&userList))
+	router.HandleFunc("/user/edit/{username}", userEditHandler(&userList))
+	router.HandleFunc("/user/delete/{username}", userDeleteHandler(&userList))
 
 	// Admin
-	http.HandleFunc("/sessions", sessionListHandler(&userList))
+	router.HandleFunc("/sessions", sessionListHandler(&userList))
 
-	// Start Server
-	http.ListenAndServe(":5221", nil)
-
+	http.ListenAndServe(":5221", router)
 }
 
 func indexHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {

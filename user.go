@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -82,11 +83,14 @@ func userEditHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 			return
 		}
 
-		var username string
-		if myUser.Role == enumAdmin {
-			username = req.FormValue("username")
-		} else {
-			username = myUser.Username
+		vars := mux.Vars(req)
+		username := vars["username"]
+
+		if myUser.Role == enumPatient {
+			if username != myUser.Username {
+				http.Redirect(res, req, "/", http.StatusUnauthorized)
+				return
+			}
 		}
 
 		ret := (**userList).FindByUsername(username)
@@ -119,7 +123,7 @@ func userEditHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 		if req.Method == http.MethodPost {
 			var edited bool = false
 			// Validate username input
-			inputUsername := req.FormValue("username")
+			/*inputUsername := req.FormValue("username")
 			if c := strings.Compare(inputUsername, selectedUser.Username); c != 0 {
 				if len(inputUsername) == 0 {
 					ViewData.ValidateUsername = false
@@ -135,7 +139,7 @@ func userEditHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 					selectedUser.Username = inputUsername
 					edited = true
 				}
-			}
+			}*/
 			// Validate first name input
 			inputFirstName := req.FormValue("firstName")
 			if c := strings.Compare(inputFirstName, selectedUser.FirstName); c != 0 {
@@ -244,7 +248,8 @@ func userDeleteHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 			return
 		}
 
-		username := req.FormValue("username")
+		vars := mux.Vars(req)
+		username := vars["username"]
 
 		var users []interface{}
 

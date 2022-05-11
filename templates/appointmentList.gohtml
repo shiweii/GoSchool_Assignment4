@@ -98,9 +98,9 @@
                         {{end}}
                     {{end}}
                     <td>
-                        <a class="btn btn-primary" href="/appointment_edit?id={{$val.ID}}" role="button">Change Appointment</a>&nbsp;&nbsp;
+                        <a class="btn btn-primary" href="/appointment/edit/{{$val.ID}}" role="button">Change Appointment</a>&nbsp;&nbsp;
                         {{if gt $val.Date $todayDate}}
-                            <a class="btn btn-danger" href="/appointment_delete?id={{$val.ID}}" role="button">Cancel Appointment</a>
+                            <a class="btn btn-danger" href="/appointment/delete/{{$val.ID}}" role="button">Cancel Appointment</a>
                         {{end}}
                     </td>
                 </tr>
