@@ -216,9 +216,8 @@ func getUser(res http.ResponseWriter, req *http.Request, userList **dll.DoublyLi
 			Name:  "myCookie",
 			Value: id.String(),
 		}
-
+		http.SetCookie(res, myCookie)
 	}
-	http.SetCookie(res, myCookie)
 
 	// if the user exists already, get user
 	var myUser *User
