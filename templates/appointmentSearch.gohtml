@@ -1,0 +1,88 @@
+{{template "header"}}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Search for available appointments</li>
+  </ol>
+</nav>
+
+{{if ne .LoggedInUser.Role "admin"}}
+<div class="alert alert-primary" role="alert">Logged in as: {{.LoggedInUser.FirstName}} {{.LoggedInUser.LastName}}</div>
+{{end}}
+
+<h2>Search for available appointments</h2>
+<div class="container bg-light border p-4">
+  <div class="row">
+    <div class="col">
+      <form id="searchForm" class="row g-3" method="post">
+        <div class="col-md-6">
+          <label for="inputDentist" class="form-label">Select Dentist</label>
+          <select class="form-select" name="inputDentist" id="inputDentist">
+            {{range $key, $val := .Dentists}}
+            <option value="{{$val.Username}}">Dr. {{$val.FirstName}} {{$val.LastName}}</option>
+            {{end}}
+          </select>
+        </div>
+        <div class="col-md-6">
+            <label for="inputDate" class="form-label">Appointment Date</label>
+            <input type="date" class="form-control" id="inputDate" name="inputDate" required>
+        </div>
+        <div class="col-12">
+            <button type="button" class="btn btn-primary" onclick="myFunction()">Clear</button>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<br/>
+<div class="list-group">
+    {{$len := len .DentistsSession}}
+    {{if gt $len 0}}
+      {{$date := .SelectedDate}}
+      {{$dentist := .Dentist}}
+      <h4>Displaying Dr. {{$dentist.FirstName}} {{$dentist.LastName}} availability, Date: {{$date | formatDate}} ({{$date | getDay}})</h4>
+      {{if eq .LoggedInUser.Role "admin"}}
+        <br/>
+         <table class="table table-striped">
+          <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Date</th>
+                <th scope="col">Session</th>
+                <th scope="col">Time</th>
+                <th scope="col">Availability</th>
+            </tr>
+          </thead>
+          <tbody>
+          {{range $key, $val := .DentistsSession}}
+            <tr>
+              <th scope="row">{{$key | addOne}}</th>
+              <td>{{$date | formatDate}} ({{$date | getDay}})</td>
+              <td>Session {{$val.Num}}</td>
+              <td>{{$val.StartTime}} - {{$val.EndTime}}</td>
+              <td>{{if not $val.Available}}(Not Available){{end}}</td>
+            </tr>
+          {{end}}
+          </tbody>
+        </table>
+      {{else}}
+        <h5>Click on time slot to make a new appointment</h5>
+        <br/>
+        {{range $key, $val := .DentistsSession}}
+            <a href="/appointment_create_confirm?{{(printf "dentist=%v&date=%v&session=%v" $dentist.Username $date $val.Num) | urlEncode}}" class="list-group-item list-group-item-action {{if not $val.Available}}disabled{{end}}">{{$date | formatDate}} ({{$date | getDay}}) | Session {{$val.Num}} | {{$val.StartTime}} - {{$val.EndTime}} {{if not $val.Available}}(Not Available){{end}}</a>
+        {{end}}
+      {{end}}
+    {{end}}
+</div>
+
+
+
+<script>
+function myFunction() {
+    document.getElementById("searchForm").reset();
+}
+</script>
+
+{{template "footer"}}

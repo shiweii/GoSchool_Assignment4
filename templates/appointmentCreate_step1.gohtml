@@ -1,0 +1,20 @@
+{{template "header"}}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Create New Appointment</li>
+  </ol>
+</nav>
+
+<div class="alert alert-primary" role="alert">Logged in as: {{.Patient.FirstName}} {{.Patient.LastName}}</div>
+
+<h1>Create New Appointment</h1>
+<h2>Select a Dentist</h2>
+<div class="list-group">
+    {{range $key, $val := .Dentists}}
+        <a href="/appointment_create_2?dentist={{$val.Username}}" class="list-group-item list-group-item-action">Dr. {{$val.FirstName}} {{$val.LastName}}</a>
+    {{end}}
+</div>
+
+{{template "footer"}}

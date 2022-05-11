@@ -1,0 +1,35 @@
+{{template "header"}}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Manage Sessions</li>
+  </ol>
+</nav>
+
+<h2>Manage Sessions</h2>
+<form method="post">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Username</th>
+                <th scope="col">Role</th>
+                <th scope="col">Session ID</th>
+                <th scope="col">Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $key, $val := .}}
+                <tr>
+                    <td>{{$val.Username}}</td>
+                    <td>{{$val.Role}}</td>
+                    <td>{{$val.SessionID}}</td>
+                    <td><input class="form-check-input" type="checkbox" name="sessionsDel" value="{{$val.SessionID}}" {{if eq $val.Role "admin"}}disabled{{end}}></td>
+                </tr>
+            {{end}}
+        </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">Delete</button>
+</form>
+
+{{template "footer"}}

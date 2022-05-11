@@ -1,0 +1,27 @@
+{{template "header"}}
+
+{{ if eq .Role "admin" }}
+<h1>Admin Home Page</h1>
+{{ end }}
+{{ if eq .Role "patient" }}
+<h1>Patient Home Page</h1>
+<div class="alert alert-primary" role="alert">Logged in as: {{.FirstName}} {{.LastName}}</div>
+{{ end }}
+
+{{ if eq .Role "admin" }}
+<h2><a href="/appointments_search">Search Available Appointment</a></h2>
+<h2><a href="/appointments">Manage Appointment</a></h2>
+<h2><a href="/sessions">Manage Sessions</a></h2>
+<h2><a href="/users">Manage Users</a></h2>
+{{ end }}
+
+{{ if eq .Role "patient" }}
+<h2><a href="/appointments">Manage Appointment</a></h2>
+<h2><a href="/appointment_create">Create New Appointment</a></h2>
+<h2><a href="/appointments_search">Search Available Appointment</a></h2>
+<h2><a href="/user_edit?username={{.Username}}">Edit Info</a></h2>
+{{ end }}
+
+<h2><a href="/logout">Log Out</a></h2>
+
+{{template "footer"}}

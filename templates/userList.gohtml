@@ -1,0 +1,53 @@
+{{template "header"}}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Manage Users</li>
+  </ol>
+</nav>
+
+
+<h2>Manage Users</h2>
+{{ if .ErrorDelete }}
+    <div class="alert alert-danger" role="alert">{{.ErrorDeleteMsg}}</div>
+{{end}}
+{{ if .Successful }}
+    <div class="alert alert-success" role="alert">User deleted successfully</div>
+{{end}}
+<form method="post">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Username</th>
+                <th scope="col">First Name</th>
+                <th scope="col">Last Name</th>
+                <th scope="col">Mobile Number</th>
+                <th scope="col">Role</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $key, $val := .Users}}
+                <tr>
+                    <th scope="row">{{$key | addOne}}</th>
+                    <td>{{$val.Username}}</td>
+                    <td>{{$val.FirstName}}</td>
+                    <td>{{$val.LastName}}</td>
+                    {{if eq $val.MobileNumber 0}}
+                        <td>-</td>
+                    {{else}}
+                        <td>{{$val.MobileNumber}}</td>
+                    {{end}}
+                    <td>{{$val.Role | firstCharToUpper}}</td>
+                    <td {{if .IsDeleted}}class="text-danger"{{end}}>{{if .IsDeleted}}Deleted{{end}}</td>
+                    <td><a class="btn btn-primary {{if eq $val.Role "admin"}}disabled{{end}}" href="/user_edit?username={{$val.Username}}" role="button">Edit</a>{{if not .IsDeleted}}&nbsp;&nbsp;<a class="btn btn-danger {{if eq $val.Role "admin"}}disabled{{end}}" href="/user_delete?username={{$val.Username}}" role="button">Delete</a>{{end}}</td>
+                </tr>
+            {{end}}
+        </tbody>
+    </table>
+</form>
+
+{{template "footer"}}

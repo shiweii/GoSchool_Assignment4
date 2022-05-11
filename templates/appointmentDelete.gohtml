@@ -1,0 +1,37 @@
+{{template "header" .PageTitle}}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item"><a href="/appointments">Manage Appointment</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Cancel Appointment</li>
+  </ol>
+</nav>
+
+<h1>Cancel Appointment</h1>
+<div class="alert alert-primary" role="alert">{{.LoggedInUser.FirstName}} {{.LoggedInUser.LastName}}</div>
+{{ if .Successful }}
+    <div class="alert alert-success" role="alert">Appointment canceled successfully</div>
+{{end}}
+    {{if eq .LoggedInUser.Role "admin"}}
+    <div>Patient: <b>{{.Appointment.Patient.FirstName}} {{.Appointment.Patient.LastName}}</b></div>
+    {{end}}
+    <div>Dentist: <b>Dr. {{.Appointment.Dentist.FirstName}} {{.Appointment.Dentist.LastName}}</b></div>
+    <div>Date: <b>{{.Appointment.Date | formatDate}} ({{.Appointment.Date | getDay}})</b></div>
+    {{$appSession := .Appointment.Session}}
+    {{range .Sessions}}
+        {{if eq .Num $appSession}}
+             <div>Time: <b>{{.StartTime}} - {{.EndTime}}</b></div>
+        {{end}}
+    {{end}}
+    <br />
+<form method="post">
+    {{if not .Successful}}
+        <a class="btn btn-primary" href="/appointments" role="button">Back</a>&nbsp;&nbsp;<button type="submit" class="btn btn-danger">Confirm</button>
+    {{end}}
+    {{if .Successful}}
+        <a class="btn btn-primary" href="/appointments" role="button">Back</a>
+    {{end}}
+</form>
+
+{{template "footer"}}

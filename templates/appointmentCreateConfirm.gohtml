@@ -1,0 +1,38 @@
+{{template "header"}}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item"><a href="/appointment_create">Create New Appointment</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Confirm Appointment</li>
+  </ol>
+</nav>
+
+<div class="alert alert-primary" role="alert">Logged in as: {{.Patient.FirstName}} {{.Patient.LastName}}</div>
+
+<h1>New Appointment Details</h1>
+{{ if .FormSubmitted}}
+  {{ if .Successful }}
+      <div class="alert alert-success" role="alert">Appointment created successfully</div>
+  {{end}}
+  {{ if not .Successful }}
+      <div class="alert alert-danger" role="alert">Error: Appointment not created, <a href="/appointment_create">click here</a> to make another appointment</div>
+  {{end}}
+{{end}}
+<h2>Appointment Detail</h2>
+<div>Dentist: <b>Dr. {{.Dentist.FirstName}} {{.Dentist.LastName}}</b></div>
+<div>Date: <b>{{.Date | formatDate}} ({{.Date | getDay}})</b></div>
+<div>Time: <b>{{.StartTime}} - {{.EndTime}}</b></div>
+<br />
+<form method="post">
+    {{if not .FormSubmitted}}
+      <a class="btn btn-primary" href="/landing" role="button">Cancel</a>&nbsp;&nbsp;<button type="submit" class="btn btn-primary">Confirm</button>
+    {{end}}
+    {{ if .FormSubmitted}}
+      {{if .Successful}}
+          <a class="btn btn-primary" href="/appointments" role="button">View Appointments</a>
+      {{end}}
+    {{end}}
+</form>
+
+{{template "footer"}}

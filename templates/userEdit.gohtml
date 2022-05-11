@@ -1,0 +1,64 @@
+{{template "header"}}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    {{if eq .LoggedInUser.Role "admin"}}<li class="breadcrumb-item"><a href="/users">Manage Users</a></li>{{end}}
+    <li class="breadcrumb-item active" aria-current="page">Edit User Information</li>
+  </ol>
+</nav>
+
+<h1>Edit User Information</h1>
+
+{{ if .Successful }}
+    <div class="alert alert-success" role="alert">User Data updated Successfully</div>
+{{end}}
+
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label" for="username">Username:</label>
+        <input {{if eq .ValidateUsername true}} class="form-control" {{else}} class="form-control is-invalid" {{end}}  type="text" id="username" name="username" value="{{.UserData.Username}}" disabled>
+        <div class="invalid-feedback">
+            {{.MessageUsername}}
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label" for="firstName">First name:</label>
+        <input {{if eq .ValidateFirstName true}} class="form-control" {{else}} class="form-control is-invalid" {{end}} type="text" id="firstName" name="firstName" value="{{.UserData.FirstName}}">
+        <div class="invalid-feedback">
+            First name cannot be empty
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label" for="lastName">Last name:</label>
+        <input {{if eq .ValidateLastName true}} class="form-control" {{else}} class="form-control is-invalid" {{end}} type="text" id="lastName" name="lastName" value="{{.UserData.LastName}}">
+        <div class="invalid-feedback">
+            Last name cannot be empty
+        </div>
+    </div>
+    {{if ne .UserData.MobileNumber 0}}
+    <div class="mb-3">
+        <label class="form-label" for="mobileNum">Mobile Number:</label>
+        <input {{if eq .ValidateMobileNumber true}} class="form-control" {{else}} class="form-control is-invalid" {{end}} type="number" id="mobileNum" name="mobileNum" value="{{.UserData.MobileNumber}}">
+        <div class="invalid-feedback">
+            Invalid mobile number
+        </div>
+    </div>
+    {{end}}
+    <div class="mb-3">
+        <label class="form-label" for="password">Password:</label>
+        <input {{if eq .ValidatePassword true}} class="form-control" {{else}} class="form-control is-invalid" {{end}} type="password" id="password" name="password">
+        <div class="invalid-feedback">
+            Invalid Password
+        </div>
+    </div>
+    <div class="mb-3">
+    {{if and (eq .LoggedInUser.Role "admin") (eq .UserData.Role "patient")}}
+        <input class="form-check-input" type="checkbox" id="deleteChkBox" name="deleteChkBox" {{if .UserData.IsDeleted}}checked{{end}} value="true"> 
+        <label class="form-check-label" for="deleteChkBox">Delete</label>
+    {{end}}
+     </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+{{template "footer"}}

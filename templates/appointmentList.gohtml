@@ -1,0 +1,118 @@
+{{template "header"}}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Manage Appointment</li>
+  </ol>
+</nav>
+
+{{if ne .LoggedInUser.Role "admin"}}
+<div class="alert alert-primary" role="alert">Logged in as: {{.LoggedInUser.FirstName}} {{.LoggedInUser.LastName}}</div>
+{{end}}
+
+<h2>Manage Appointment</h2>
+<br/>
+{{$role := .LoggedInUser.Role}}
+{{if eq $role "admin"}}
+    <div class="container bg-light border p-4">
+        <div class="row">
+            <div class="col">
+                <form id="searchForm" class="row g-3" method="post">
+                    <div class="col-md-6">
+                        <label for="inputDentist" class="form-label">Select Dentist</label>
+                        <select class="form-select" name="inputDentist" id="inputDentist">
+                            <option value="0" selected>Select a Dentist...</option>
+                            {{range $key, $val := .Dentists}}
+                                <option value="{{$val.Username}}">Dr. {{$val.FirstName}} {{$val.LastName}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="inputDate" class="form-label">Appointment Date</label>
+                        <input type="date" class="form-control" id="inputDate" name="inputDate">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="inputPatientMobileNumber" class="form-label">Patient Mobile Number</label>
+                        <input type="number" class="form-control" id="inputPatientMobileNumber" name="inputPatientMobileNumber" placeholder="Patient Mobile Number">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="inputSession" class="form-label">Session</label>
+                        <select class="form-select" name="inputSession" id="inputSession">
+                            <option value="0" selected>Select a Session...</option>
+                            {{range $key, $val := .Sessions}}
+                                <option value="{{$val.Num}}">Session {{$val.Num}} - {{$val.StartTime}} - {{$val.EndTime}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button type="button" class="btn btn-primary" onclick="myFunction()">Clear</button>
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <br/>
+{{end}}
+{{if eq $role "patient"}}
+    <div class="btn-group">
+        <a href="/appointments?view=upcoming" class="btn btn-outline-primary {{if eq .Option "upcoming"}}active{{end}}">Upcoming</a>
+        <a href="/appointments?view=all" class="btn btn-outline-primary {{if eq .Option "all"}}active{{end}}">All</a>
+    </div>
+    <br/><br />
+{{end}}
+{{$len := len .Appointments}}
+{{if eq $len 0}}
+    {{if eq $role "admin"}}
+        <div class="alert alert-info" role="alert">There are no appointments.</div>
+    {{else}}
+         <div class="alert alert-info   " role="alert">There are no upcoming appointments, <a href="/appointment_create">click here</a> to make a new appointment.</div>
+    {{end}}
+{{else}}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Dentist</th>
+                {{if eq $role "admin"}}<th scope="col">Patient</th>{{end}}
+                <th scope="col">Date</th>
+                <th scope="col">Session</th>
+                <th scope="col">Time</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{$sessionList := .Sessions}}
+            {{$todayDate := .TodayDate}}
+            {{range $key, $val := .Appointments}}
+                <tr>
+                    <th scope="row">{{$key | addOne}}</th>
+                    <td>Dr. {{$val.Dentist.FirstName}} {{$val.Dentist.LastName}}</td>
+                    {{if eq $role "admin"}}<td>{{$val.Patient.FirstName}} {{$val.Patient.LastName}}</td>{{end}}
+                    <td>{{$val.Date | formatDate}} ({{$val.Date | getDay}})</td>
+                    <td>Session {{$val.Session}}</td>
+                    {{range $sessionList}}
+                        {{if eq .Num $val.Session}}
+                            <td>{{.StartTime}} - {{.EndTime}}</td>
+                        {{end}}
+                    {{end}}
+                    <td>
+                        <a class="btn btn-primary" href="/appointment_edit?id={{$val.ID}}" role="button">Change Appointment</a>&nbsp;&nbsp;
+                        {{if gt $val.Date $todayDate}}
+                            <a class="btn btn-danger" href="/appointment_delete?id={{$val.ID}}" role="button">Cancel Appointment</a>
+                        {{end}}
+                    </td>
+                </tr>
+            {{end}}
+        </tbody>
+    </table>
+{{end}}
+
+<script>
+function myFunction() {
+    document.getElementById("searchForm").reset();
+}
+</script>
+
+{{template "footer"}}

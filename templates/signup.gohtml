@@ -1,0 +1,29 @@
+{{template "header"}}
+
+<h1>Create New Account</h1>
+<h3>Enter the following to create a new account</h3>
+<form method="post">
+    <div class="mb-3">  
+        <label class="form-label" for ="username">Username:</label>
+        <input class="form-control" type="text" name="username" placeholder="Username">
+    </div>
+    <div class="mb-3"> 
+        <label class="form-label" for ="password">Password:</label>
+        <input class="form-control" type="text" name="password" placeholder="Password">
+    </div>
+    <div class="mb-3"> 
+        <label class="form-label" for ="firstname">First name:</label>
+        <input class="form-control" type="text" name="firstname" placeholder="First Name">
+    </div>
+    <div class="mb-3"> 
+        <label class="form-label" for ="lastname">Last name:</label>
+        <input class="form-control" type="text" name="lastname" placeholder="Last Name">
+    </div>
+    <div class="mb-3"> 
+        <label class="form-label" for ="mobileNum">Last name:</label>
+        <input class="form-control" type="number" name="mobileNum" placeholder="Mobile Number">
+    </div>
+    <button type="submit" class="btn btn-primary">Sign up</button>
+</form>
+
+{{template "footer"}}
