@@ -44,7 +44,7 @@ func newAppointment(id int, pateint, dentist, date string, session int) *Appoint
 
 func getAppointmentData() []*Appointment {
 	var appointments []*Appointment
-	JSONData, _ := ioutil.ReadFile(appointmentData)
+	JSONData, _ := ioutil.ReadFile(util.GetEnvVar("APPOINTMENT_DATA"))
 	err := json.Unmarshal(JSONData, &appointments)
 	if err != nil {
 		fmt.Println(err)
@@ -57,7 +57,7 @@ func addAppointmentData(a *Appointment) {
 	appointments = getAppointmentData()
 	appointments = append(appointments, a)
 	JSONData, _ := json.MarshalIndent(appointments, "", " ")
-	err := ioutil.WriteFile(appointmentData, JSONData, 0644)
+	err := ioutil.WriteFile(util.GetEnvVar("APPOINTMENT_DATA"), JSONData, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -71,7 +71,7 @@ func updateAppointmentData(oldAppointment *Appointment, editiedAppointment *Appo
 		}
 	}
 	JSONData, _ := json.MarshalIndent(appointments, "", " ")
-	err := ioutil.WriteFile(appointmentData, JSONData, 0644)
+	err := ioutil.WriteFile(util.GetEnvVar("APPOINTMENT_DATA"), JSONData, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -88,7 +88,7 @@ func deleteAppointmentData(id int) {
 	}
 	appointments = remove(appointments, idx)
 	JSONData, _ := json.MarshalIndent(appointments, "", " ")
-	err := ioutil.WriteFile(appointmentData, JSONData, 0644)
+	err := ioutil.WriteFile(util.GetEnvVar("APPOINTMENT_DATA"), JSONData, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}

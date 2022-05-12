@@ -1,10 +1,14 @@
 package utility
 
 import (
+	"GoSchool_Assignment4/logger"
 	"bufio"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
+	"io"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"strconv"
@@ -19,9 +23,49 @@ import (
 func GetEnvVar(v string) string {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		logger.Fatal.Fatal("Error loading .env file")
 	}
 	return os.Getenv(v)
+}
+
+func VerifyCheckSum() {
+	for {
+		logChecksum, err := ioutil.ReadFile("data/checksum")
+		if err != nil {
+			logger.Error.Println(err)
+		}
+		// convert content to a 'string'
+		str := string(logChecksum)
+		// Compute our current log's SHA256 hash
+		hash, err := computeSHA256(".env")
+		if err != nil {
+			logger.Error.Println(err)
+		} else {
+			// Compare our calculated hash with our stored hash
+			if str == hash {
+				// Ok the checksums match.
+				logger.Info.Println(".env file integrity OK.")
+			} else {
+				// The file integrity has been compromised...
+				logger.Warning.Println("File Tampering detected.")
+			}
+		}
+		time.Sleep(5 * time.Minute)
+	}
+}
+
+func computeSHA256(file string) (string, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, f); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
 func ReadInput() string {

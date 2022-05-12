@@ -1,10 +1,11 @@
 package logger
 
 import (
+	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
+	"time"
 )
 
 var (
@@ -12,32 +13,25 @@ var (
 	Info    *log.Logger // Important information
 	Warning *log.Logger // Be concerned
 	Error   *log.Logger // Critical problem)
+	Fatal   *log.Logger
+	file    *os.File
+	err     error
 )
 
 func init() {
-	file, err := os.OpenFile("logger/errors.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	t := time.Now()
+	fileName := fmt.Sprintf("log_%d_%02d_%02d.log", t.Year(), int(t.Month()), t.Day())
+	file, err = os.OpenFile("log/"+fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open error log file:", err)
 	}
-	Trace = log.New(ioutil.Discard, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile)
-	Info = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	Warning = log.New(os.Stdout, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Trace = log.New(os.Stdout, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Info = log.New(io.MultiWriter(file, os.Stderr), "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Warning = log.New(io.MultiWriter(file, os.Stderr), "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
 	Error = log.New(io.MultiWriter(file, os.Stderr), "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-	go Checksum()
+	Fatal = log.New(io.MultiWriter(file, os.Stderr), "FATAL: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
-func closeLogger() {
-
-}
-
-func Checksum() {
-	// create a new batch?
-	/*for {
-		time.Sleep(8 * time.Second)
-
-		fmt.Println("Testing")
-	}
-	*/
-	//b, err := ComputeSHA256("logger/errors.log")
-	//fmt.Println(b, err)
+func CloseLogger() {
+	file.Close()
 }

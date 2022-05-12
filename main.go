@@ -5,11 +5,11 @@ import (
 	dll "GoSchool_Assignment4/doublylinkedlist"
 	"GoSchool_Assignment4/logger"
 	util "GoSchool_Assignment4/utility"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 
 	"github.com/gorilla/mux"
 )
@@ -28,18 +28,23 @@ var (
 func init() {
 	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*"))
 
-	s3Bucket := util.GetEnvVar("S3_BUCKET")
-	secretKey := util.GetEnvVar("SECRET_KEY")
-
-	fmt.Println(s3Bucket, secretKey)
+	// Go routine to verify .env checksum every 5 munutes
+	go util.VerifyCheckSum()
 }
 
 func main() {
 
 	logger.Info.Println("Server Start...")
 
-	//go logger.Checksum()
 	// encrypt decrypt file
+	sigchan := make(chan os.Signal, 1)
+	signal.Notify(sigchan, os.Interrupt)
+	go func() {
+		<-sigchan
+		logger.Info.Println("Server Stop...")
+		logger.CloseLogger()
+		os.Exit(0)
+	}()
 
 	// Initialize new doubly linkedlist and binary search tree
 	var (
@@ -78,7 +83,6 @@ func main() {
 	router.HandleFunc("/signup", signupHandler(&userList))
 	router.HandleFunc("/login", loginHandler(&userList))
 	router.HandleFunc("/logout", logoutHandler(&userList))
-	router.HandleFunc("/landing", landingHandler(&userList))
 	router.Handle("/favicon.ico", http.NotFoundHandler())
 
 	// Appointment
@@ -99,7 +103,7 @@ func main() {
 	// Admin
 	router.HandleFunc("/sessions", sessionListHandler(&userList))
 
-	http.ListenAndServe(portNum, router)
+	http.ListenAndServe(util.GetEnvVar("PORT"), router)
 }
 
 func indexHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
@@ -128,33 +132,5 @@ func indexHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 		}
 
 		tpl.ExecuteTemplate(res, "index.gohtml", ViewData)
-	}
-}
-
-func landingHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		defer func() {
-			if err := recover(); err != nil {
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
-				http.Redirect(res, req, "/", http.StatusInternalServerError)
-				return
-			}
-		}()
-		myUser, authFail, httpStatusNum := authenticationCheck(res, req, userList, false)
-		if authFail {
-			http.Redirect(res, req, "/", httpStatusNum)
-			return
-		}
-
-		ViewData := struct {
-			LoggedInUser *User
-			PageTitle    string
-		}{
-			myUser,
-			"Homepage",
-		}
-
-		tpl.ExecuteTemplate(res, "landing.gohtml", ViewData)
 	}
 }

@@ -144,7 +144,7 @@ func signupHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 				addUserDate(&myUser)
 			}
 			// redirect to patient landing page
-			http.Redirect(res, req, "/patient", http.StatusSeeOther)
+			http.Redirect(res, req, "/appointments", http.StatusSeeOther)
 			return
 
 		}

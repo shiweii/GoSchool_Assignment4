@@ -297,7 +297,7 @@ func userDeleteHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 
 func getUserData() []*User {
 	var users []*User
-	JSONData, _ := ioutil.ReadFile(userData)
+	JSONData, _ := ioutil.ReadFile(util.GetEnvVar("USER_DATA"))
 	err := json.Unmarshal(JSONData, &users)
 	if err != nil {
 		fmt.Println(err)
@@ -310,7 +310,7 @@ func addUserDate(u *User) {
 	users = getUserData()
 	users = append(users, u)
 	JSONData, _ := json.MarshalIndent(users, "", " ")
-	err := ioutil.WriteFile(userData, JSONData, 0644)
+	err := ioutil.WriteFile(util.GetEnvVar("USER_DATA"), JSONData, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -324,7 +324,7 @@ func updateUserData(oldUser *User, newUser *User) {
 		}
 	}
 	JSONData, _ := json.MarshalIndent(users, "", " ")
-	err := ioutil.WriteFile(userData, JSONData, 0644)
+	err := ioutil.WriteFile(util.GetEnvVar("USER_DATA"), JSONData, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -338,7 +338,7 @@ func deleteUserData(delUser *User) {
 		}
 	}
 	JSONData, _ := json.MarshalIndent(users, "", " ")
-	err := ioutil.WriteFile(userData, JSONData, 0644)
+	err := ioutil.WriteFile(util.GetEnvVar("USER_DATA"), JSONData, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
