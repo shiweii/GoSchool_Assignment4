@@ -2,8 +2,11 @@ package main
 
 import (
 	dll "GoSchool_Assignment4/doublylinkedlist"
+	ede "GoSchool_Assignment4/encryptdecrypt"
+	util "GoSchool_Assignment4/utility"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	uuid "github.com/satori/go.uuid"
@@ -85,6 +88,16 @@ func sessionListHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 
 func signupHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				ede.CheckEncryption(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
+				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
+				Error.Println(err)
+				http.Redirect(res, req, "/", http.StatusInternalServerError)
+				return
+			}
+		}()
+
 		if alreadyLoggedIn(req, userList) {
 			http.Redirect(res, req, "/", http.StatusSeeOther)
 			return

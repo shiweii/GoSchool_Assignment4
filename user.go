@@ -2,6 +2,7 @@ package main
 
 import (
 	dll "GoSchool_Assignment4/doublylinkedlist"
+	ede "GoSchool_Assignment4/encryptdecrypt"
 	util "GoSchool_Assignment4/utility"
 	"encoding/json"
 	"fmt"
@@ -76,6 +77,7 @@ func userEditHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
+				ede.CheckEncryption(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
 				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
 				Error.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
@@ -249,6 +251,7 @@ func userDeleteHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
+				ede.CheckEncryption(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
 				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
 				Error.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
@@ -256,7 +259,7 @@ func userDeleteHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 			}
 		}()
 
-		_, authFail, httpStatusNum := authenticationCheck(res, req, userList, true)
+		myUser, authFail, httpStatusNum := authenticationCheck(res, req, userList, true)
 		if authFail {
 			http.Redirect(res, req, "/", httpStatusNum)
 			return
@@ -268,11 +271,17 @@ func userDeleteHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 		var users []interface{}
 
 		ViewData := struct {
+			LoggedInUser   *User
+			PageTitle      string
+			CurrentPage    string
 			Users          []interface{}
 			Successful     bool
 			ErrorDelete    bool
 			ErrorDeleteMsg string
 		}{
+			myUser,
+			"Manage Users",
+			"MU",
 			users,
 			false,
 			false,
@@ -296,6 +305,18 @@ func userDeleteHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 }
 
 func getUserData() []*User {
+	ede.DecryptFile(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
+	var users []*User
+	JSONData, _ := ioutil.ReadFile(util.GetEnvVar("USER_DATA"))
+	err := json.Unmarshal(JSONData, &users)
+	if err != nil {
+		fmt.Println(err)
+	}
+	ede.EncryptFile(util.GetEnvVar("USER_DATA"), util.GetEnvVar("USER_DATA_ENCRYPT"))
+	return users
+}
+
+func getDecryptedUserData() []*User {
 	var users []*User
 	JSONData, _ := ioutil.ReadFile(util.GetEnvVar("USER_DATA"))
 	err := json.Unmarshal(JSONData, &users)
@@ -306,18 +327,21 @@ func getUserData() []*User {
 }
 
 func addUserDate(u *User) {
+	ede.DecryptFile(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
 	var users []*User
-	users = getUserData()
+	users = getDecryptedUserData()
 	users = append(users, u)
 	JSONData, _ := json.MarshalIndent(users, "", " ")
 	err := ioutil.WriteFile(util.GetEnvVar("USER_DATA"), JSONData, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
+	ede.EncryptFile(util.GetEnvVar("USER_DATA"), util.GetEnvVar("USER_DATA_ENCRYPT"))
 }
 
 func updateUserData(oldUser *User, newUser *User) {
-	var users []*User = getUserData()
+	ede.DecryptFile(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
+	var users []*User = getDecryptedUserData()
 	for k, v := range users {
 		if reflect.DeepEqual(v, oldUser) {
 			users[k] = newUser
@@ -328,10 +352,12 @@ func updateUserData(oldUser *User, newUser *User) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	ede.EncryptFile(util.GetEnvVar("USER_DATA"), util.GetEnvVar("USER_DATA_ENCRYPT"))
 }
 
 func deleteUserData(delUser *User) {
-	var users []*User = getUserData()
+	ede.DecryptFile(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
+	var users []*User = getDecryptedUserData()
 	for k, v := range users {
 		if v.Username == delUser.Username {
 			users[k] = delUser
@@ -342,6 +368,7 @@ func deleteUserData(delUser *User) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	ede.EncryptFile(util.GetEnvVar("USER_DATA"), util.GetEnvVar("USER_DATA_ENCRYPT"))
 }
 
 func getDentistList(users []interface{}) []*User {

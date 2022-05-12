@@ -3,6 +3,7 @@ package main
 import (
 	bst "GoSchool_Assignment4/binarysearchtree"
 	dll "GoSchool_Assignment4/doublylinkedlist"
+	ede "GoSchool_Assignment4/encryptdecrypt"
 	"GoSchool_Assignment4/logger"
 	util "GoSchool_Assignment4/utility"
 	"html/template"
@@ -27,16 +28,16 @@ var (
 
 func init() {
 	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*"))
-
 	// Go routine to verify .env checksum every 5 munutes
 	go util.VerifyCheckSum()
+	// Go Routine to perform encryption if file was left decrypted due to panic
+	go ede.CheckEncryption(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
 }
 
 func main() {
 
 	logger.Info.Println("Server Start...")
 
-	// encrypt decrypt file
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, os.Interrupt)
 	go func() {
