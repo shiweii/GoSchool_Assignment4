@@ -1,12 +1,13 @@
-{{template "header"}}
+{{template "header" .}}
 
+{{if eq .LoggedInUser.Role "admin"}}
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/">Home</a></li>
-    {{if eq .LoggedInUser.Role "admin"}}<li class="breadcrumb-item"><a href="/users">Manage Users</a></li>{{end}}
+    <li class="breadcrumb-item"><a href="/users">Manage Users</a></li>
     <li class="breadcrumb-item active" aria-current="page">Edit User Information</li>
   </ol>
 </nav>
+{{end}}
 
 <h1>Edit User Information</h1>
 
@@ -47,7 +48,7 @@
     {{end}}
     <div class="mb-3">
         <label class="form-label" for="password">Password:</label>
-        <input {{if eq .ValidatePassword true}} class="form-control" {{else}} class="form-control is-invalid" {{end}} type="password" id="password" name="password">
+        <input {{if eq .ValidatePassword true}} class="form-control" {{else}} class="form-control is-invalid" {{end}} type="password" id="password" name="password" autocomplete="off">
         <div class="invalid-feedback">
             Invalid Password
         </div>

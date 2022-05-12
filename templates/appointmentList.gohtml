@@ -1,15 +1,4 @@
-{{template "header"}}
-
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/">Home</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Manage Appointment</li>
-  </ol>
-</nav>
-
-{{if ne .LoggedInUser.Role "admin"}}
-<div class="alert alert-primary" role="alert">Logged in as: {{.LoggedInUser.FirstName}} {{.LoggedInUser.LastName}}</div>
-{{end}}
+{{template "header" .}}
 
 <h2>Manage Appointment</h2>
 <br/>

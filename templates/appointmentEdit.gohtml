@@ -1,17 +1,14 @@
-{{template "header"}}
+{{template "header" .}}
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/">Home</a></li>
     <li class="breadcrumb-item"><a href="/appointments">Manage Appointment</a></li>
     <li class="breadcrumb-item active" aria-current="page">Change Appointment</li>
   </ol>
 </nav>
 
-<h1>Change Appointment</h1>
-<div class="alert alert-primary" role="alert">{{.LoggedInUser.FirstName}} {{.LoggedInUser.LastName}}</div>
 
-<div>Appointment Details</div>
+<div><b><u>Appointment Details</u></b></div>
 {{if eq .LoggedInUser.Role "admin"}}
 <div>Patient: <b>{{.Appointment.Patient.FirstName}} {{.Appointment.Patient.LastName}}</b></div>
 {{end}}

@@ -1,14 +1,4 @@
-{{template "header"}}
-
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/">Home</a></li>
-    <li class="breadcrumb-item"><a href="/appointment_create">Create New Appointment</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Confirm Appointment</li>
-  </ol>
-</nav>
-
-<div class="alert alert-primary" role="alert">Logged in as: {{.Patient.FirstName}} {{.Patient.LastName}}</div>
+{{template "header" .}}
 
 <h1>New Appointment Details</h1>
 {{ if .FormSubmitted}}
@@ -26,7 +16,7 @@
 <br />
 <form method="post">
     {{if not .FormSubmitted}}
-      <a class="btn btn-primary" href="/landing" role="button">Cancel</a>&nbsp;&nbsp;<button type="submit" class="btn btn-primary">Confirm</button>
+      <a class="btn btn-primary" href="/" role="button">Cancel</a>&nbsp;&nbsp;<button type="submit" class="btn btn-primary">Confirm</button>
     {{end}}
     {{ if .FormSubmitted}}
       {{if .Successful}}

@@ -1,21 +1,21 @@
-{{template "header"}}
+{{template "header" .}}
 
-{{ if eq .Role "admin" }}
+{{ if eq .LoggedInUser.Role "admin" }}
 <h1>Admin Home Page</h1>
 {{ end }}
-{{ if eq .Role "patient" }}
+{{ if eq .LoggedInUser.Role "patient" }}
 <h1>Patient Home Page</h1>
-<div class="alert alert-primary" role="alert">Logged in as: {{.FirstName}} {{.LastName}}</div>
+<div class="alert alert-primary" role="alert">Logged in as: {{.LoggedInUser.FirstName}} {{.LoggedInUser.LastName}}</div>
 {{ end }}
 
-{{ if eq .Role "admin" }}
+{{ if eq .LoggedInUser.Role "admin" }}
 <h2><a href="/appointments/search">Search Available Appointment</a></h2>
 <h2><a href="/appointments">Manage Appointment</a></h2>
 <h2><a href="/sessions">Manage Sessions</a></h2>
 <h2><a href="/users">Manage Users</a></h2>
 {{ end }}
 
-{{ if eq .Role "patient" }}
+{{ if eq .LoggedInUser.Role "patient" }}
 <h2><a href="/appointments">Manage Appointment</a></h2>
 <h2><a href="/appointment/create">Create New Appointment</a></h2>
 <h2><a href="/appointments/search">Search Available Appointment</a></h2>

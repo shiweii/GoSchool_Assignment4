@@ -2,6 +2,7 @@ package main
 
 // Enum for common use messages
 const (
+	portNum         = ":5221"
 	enumPatient     = "patient"
 	enumAdmin       = "admin"
 	enumDentist     = "dentist"

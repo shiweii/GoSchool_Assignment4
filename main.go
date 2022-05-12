@@ -3,7 +3,9 @@ package main
 import (
 	bst "GoSchool_Assignment4/binarysearchtree"
 	dll "GoSchool_Assignment4/doublylinkedlist"
+	"GoSchool_Assignment4/logger"
 	util "GoSchool_Assignment4/utility"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -25,9 +27,19 @@ var (
 
 func init() {
 	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*"))
+
+	s3Bucket := util.GetEnvVar("S3_BUCKET")
+	secretKey := util.GetEnvVar("SECRET_KEY")
+
+	fmt.Println(s3Bucket, secretKey)
 }
 
 func main() {
+
+	logger.Info.Println("Server Start...")
+
+	//go logger.Checksum()
+	// encrypt decrypt file
 
 	// Initialize new doubly linkedlist and binary search tree
 	var (
@@ -80,14 +92,14 @@ func main() {
 	router.HandleFunc("/appointment/delete/{id:[0-9]+}", appointmentDeleteHandler(&userList, &appointmentSessionList, &appointmentTree))
 
 	// User
-	router.HandleFunc("/users", usersHandler(&userList))
+	router.HandleFunc("/users", userListHandler(&userList))
 	router.HandleFunc("/user/edit/{username}", userEditHandler(&userList))
 	router.HandleFunc("/user/delete/{username}", userDeleteHandler(&userList))
 
 	// Admin
 	router.HandleFunc("/sessions", sessionListHandler(&userList))
 
-	http.ListenAndServe(":5221", router)
+	http.ListenAndServe(portNum, router)
 }
 
 func indexHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
@@ -103,9 +115,19 @@ func indexHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 
 		myUser := getUser(res, req, userList)
 		if alreadyLoggedIn(req, userList) {
-			http.Redirect(res, req, "/landing", http.StatusSeeOther)
+			http.Redirect(res, req, "/appointments", http.StatusSeeOther)
+			return
 		}
-		tpl.ExecuteTemplate(res, "index.gohtml", myUser)
+
+		ViewData := struct {
+			LoggedInUser *User
+			PageTitle    string
+		}{
+			myUser,
+			"Central City Dentist Clinic",
+		}
+
+		tpl.ExecuteTemplate(res, "index.gohtml", ViewData)
 	}
 }
 
@@ -124,6 +146,15 @@ func landingHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 			http.Redirect(res, req, "/", httpStatusNum)
 			return
 		}
-		tpl.ExecuteTemplate(res, "landing.gohtml", myUser)
+
+		ViewData := struct {
+			LoggedInUser *User
+			PageTitle    string
+		}{
+			myUser,
+			"Homepage",
+		}
+
+		tpl.ExecuteTemplate(res, "landing.gohtml", ViewData)
 	}
 }

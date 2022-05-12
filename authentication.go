@@ -32,7 +32,7 @@ func authenticationCheck(res http.ResponseWriter, req *http.Request, userList **
 func sessionListHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
-		_, authFail, httpStatusNum := authenticationCheck(res, req, userList, true)
+		myUser, authFail, httpStatusNum := authenticationCheck(res, req, userList, true)
 		if authFail {
 			http.Redirect(res, req, "/", httpStatusNum)
 			return
@@ -46,9 +46,21 @@ func sessionListHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 
 		sessions := []SessionStrcut{}
 
+		ViewData := struct {
+			LoggedInUser *User
+			PageTitle    string
+			CurrentPage  string
+			Sessions     []SessionStrcut
+		}{
+			myUser,
+			"Manage Session",
+			"MS",
+			sessions,
+		}
+
 		for k, v := range mapSessions {
 			user := (**userList).FindByUsername(v).(*User)
-			sessions = append(sessions, SessionStrcut{SessionID: k, Username: v, Role: user.Role})
+			ViewData.Sessions = append(ViewData.Sessions, SessionStrcut{SessionID: k, Username: v, Role: user.Role})
 		}
 
 		// Process form submission
@@ -64,7 +76,7 @@ func sessionListHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 			http.Redirect(res, req, "/sessions", http.StatusSeeOther)
 		}
 
-		err := tpl.ExecuteTemplate(res, "sessions.gohtml", sessions)
+		err := tpl.ExecuteTemplate(res, "sessions.gohtml", ViewData)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -77,7 +89,16 @@ func signupHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 			http.Redirect(res, req, "/", http.StatusSeeOther)
 			return
 		}
+
 		var myUser User
+
+		ViewData := struct {
+			LoggedInUser *User
+			PageTitle    string
+		}{
+			nil,
+			"Sign Up",
+		}
 		// process form submission
 		if req.Method == http.MethodPost {
 			// get form values
@@ -127,7 +148,7 @@ func signupHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 			return
 
 		}
-		tpl.ExecuteTemplate(res, "signup.gohtml", myUser)
+		tpl.ExecuteTemplate(res, "signup.gohtml", ViewData)
 	}
 }
 
@@ -136,6 +157,14 @@ func loginHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 		if alreadyLoggedIn(req, userList) {
 			http.Redirect(res, req, "/", http.StatusSeeOther)
 			return
+		}
+
+		ViewData := struct {
+			LoggedInUser *User
+			PageTitle    string
+		}{
+			nil,
+			"Login",
 		}
 
 		// process form submission
@@ -168,10 +197,10 @@ func loginHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 			}
 			http.SetCookie(res, myCookie)
 			mapSessions[myCookie.Value] = user.Username
-			http.Redirect(res, req, "/landing", http.StatusSeeOther)
+			http.Redirect(res, req, "/appointments", http.StatusSeeOther)
 			return
 		}
-		tpl.ExecuteTemplate(res, "login.gohtml", nil)
+		tpl.ExecuteTemplate(res, "login.gohtml", ViewData)
 	}
 }
 

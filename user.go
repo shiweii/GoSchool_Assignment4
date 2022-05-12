@@ -39,10 +39,10 @@ func newUser(username, password, role, firstName, lastName string, mobileNumber 
 	}
 }
 
-func usersHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
+func userListHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
-		_, authFail, httpStatusNum := authenticationCheck(res, req, userList, true)
+		myUser, authFail, httpStatusNum := authenticationCheck(res, req, userList, true)
 		if authFail {
 			http.Redirect(res, req, "/", httpStatusNum)
 			return
@@ -51,11 +51,17 @@ func usersHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 		users := (**userList).GetList()
 
 		ViewData := struct {
+			LoggedInUser   *User
+			PageTitle      string
+			CurrentPage    string
 			Users          []interface{}
 			Successful     bool
 			ErrorDelete    bool
 			ErrorDeleteMsg string
 		}{
+			myUser,
+			"Manage Users",
+			"MU",
 			users,
 			false,
 			false,
@@ -99,6 +105,8 @@ func userEditHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 
 		ViewData := struct {
 			LoggedInUser         *User
+			PageTitle            string
+			CurrentPage          string
 			UserData             *User
 			ValidateUsername     bool
 			MessageUsername      string
@@ -109,6 +117,8 @@ func userEditHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 			Successful           bool
 		}{
 			myUser,
+			"Edit User Information",
+			"",
 			selectedUser,
 			true,
 			"",
@@ -117,6 +127,10 @@ func userEditHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
 			true,
 			true,
 			false,
+		}
+
+		if ViewData.LoggedInUser.Role == enumAdmin {
+			ViewData.CurrentPage = "MU"
 		}
 
 		// process form submission

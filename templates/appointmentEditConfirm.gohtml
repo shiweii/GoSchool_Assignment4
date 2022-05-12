@@ -1,19 +1,17 @@
-{{template "header" .PageTitle}}
+{{template "header" .}}
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/">Home</a></li>
     <li class="breadcrumb-item"><a href="/appointments">Manage Appointment</a></li>
     <li class="breadcrumb-item active" aria-current="page">Change Appointment</li>
   </ol>
 </nav>
 
 <h1>Confirm Appointment Detail</h1>
-<div class="alert alert-primary" role="alert">{{.LoggedInUser.FirstName}} {{.LoggedInUser.LastName}}</div>
 {{ if .Successful }}
     <div class="alert alert-success" role="alert">Appointment changed successfully</div>
 {{end}}
-<h2>Existing Appointment</h2>
+<h3><u>Existing Appointment</u></h3>
 {{if eq .LoggedInUser.Role "admin"}}
 <div>Patient: <b>{{.Appointment.Patient.FirstName}} {{.Appointment.Patient.LastName}}</b></div>
 {{end}}
@@ -26,7 +24,7 @@
     {{end}}
 {{end}}
 <hr/>
-<h2>Updated Appointment</h2>
+<h3><u>Updated Appointment</u></h3>
 {{if eq .LoggedInUser.Role "admin"}}
 <div>Patient: <b>{{.Appointment.Patient.FirstName}} {{.Appointment.Patient.LastName}}</b></div>
 {{end}}
@@ -41,7 +39,7 @@
 <br/>
 <form method="post">
     {{if not .Successful}}
-    <a class="btn btn-primary" href="/appointment_edit?id={{.Appointment.ID}}" role="button">Back</a>&nbsp;&nbsp;<button type="submit" class="btn btn-primary">Confirm</button>
+    <a class="btn btn-primary" href="/appointment/edit/{{.Appointment.ID}}" role="button">Back</a>&nbsp;&nbsp;<button type="submit" class="btn btn-primary">Confirm</button>
     {{end}}
     {{if .Successful}}
         <a class="btn btn-primary" href="/appointments" role="button">Back to appointment listing</a>

@@ -4,15 +4,25 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
+
+func GetEnvVar(v string) string {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	return os.Getenv(v)
+}
 
 func ReadInput() string {
 	inputReader := bufio.NewReader(os.Stdin)

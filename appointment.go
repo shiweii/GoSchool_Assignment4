@@ -142,6 +142,8 @@ func appointmentListHandler(userList, appointmentSessionList **dll.DoublyLinkedl
 
 		ViewData := struct {
 			LoggedInUser *User
+			PageTitle    string
+			CurrentPage  string
 			Appointments []*bst.BinaryNode
 			Sessions     []interface{}
 			Dentists     []*User
@@ -149,6 +151,8 @@ func appointmentListHandler(userList, appointmentSessionList **dll.DoublyLinkedl
 			TodayDate    string
 		}{
 			myUser,
+			"Appointments",
+			"MA",
 			appointments,
 			sessions,
 			dentists,
@@ -252,10 +256,14 @@ func appointmentCreateHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc 
 
 		users := (**userList).GetList()
 		ViewData := struct {
-			Patient  *User
-			Dentists []*User
+			LoggedInUser *User
+			PageTitle    string
+			CurrentPage  string
+			Dentists     []*User
 		}{
 			myUser,
+			"Create New Appointment",
+			"CNA",
 			getDentistList(users),
 		}
 
@@ -284,13 +292,17 @@ func appointmentCreatePart2Handler(userList, appointmentSessionList **dll.Doubly
 		dt := time.Now()
 
 		ViewData := struct {
-			Patient      *User
+			LoggedInUser *User
+			PageTitle    string
+			CurrentPage  string
 			Dentist      *User
 			TodayDate    string
 			Sessions     []AppointmentSession
 			SelectedDate string
 		}{
 			myUser,
+			"Create New Appointment",
+			"CNA",
 			nil,
 			dt.Format("2006-01-02"),
 			sessionList,
@@ -353,7 +365,9 @@ func appointmentCreateConfirmHandler(userList, appointmentSessionList **dll.Doub
 		dentist := (**userList).FindByUsername(dentistReq)
 
 		ViewData := struct {
-			Patient       *User
+			LoggedInUser  *User
+			PageTitle     string
+			CurrentPage   string
 			Dentist       *User
 			Date          string
 			StartTime     string
@@ -362,6 +376,8 @@ func appointmentCreateConfirmHandler(userList, appointmentSessionList **dll.Doub
 			FormSubmitted bool
 		}{
 			myUser,
+			"Create New Appointment",
+			"CNA",
 			dentist.(*User),
 			appointmentDate.Format("2006-01-02"),
 			session.StartTime,
@@ -436,6 +452,8 @@ func appointmentEditHandler(userList, appointmentSessionList **dll.DoublyLinkedl
 
 		ViewData := struct {
 			LoggedInUser    *User
+			PageTitle       string
+			CurrentPage     string
 			Appointment     *bst.BinaryNode
 			Dentists        []*User
 			DentistsSession []AppointmentSession
@@ -445,6 +463,8 @@ func appointmentEditHandler(userList, appointmentSessionList **dll.DoublyLinkedl
 			SelectedDentist string
 		}{
 			myUser,
+			"Change Appointment",
+			"MA",
 			appointment,
 			dentists,
 			sessionList,
@@ -523,6 +543,7 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 		ViewData := struct {
 			LoggedInUser *User
 			PageTitle    string
+			CurrentPage  string
 			Appointment  *bst.BinaryNode
 			Dentist      *User
 			Date         string
@@ -535,6 +556,7 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 		}{
 			myUser,
 			"Confrim Appointment Change",
+			"MA",
 			appointment,
 			dentist,
 			dateReq,
@@ -649,6 +671,8 @@ func appointmentSearchHandler(userList, appointmentSessionList **dll.DoublyLinke
 
 		ViewData := struct {
 			LoggedInUser    *User
+			PageTitle       string
+			CurrentPage     string
 			Dentist         *User
 			Dentists        []*User
 			TodayDate       string
@@ -656,6 +680,8 @@ func appointmentSearchHandler(userList, appointmentSessionList **dll.DoublyLinke
 			SelectedDate    string
 		}{
 			myUser,
+			"Search Available Appointment",
+			"SAA",
 			nil,
 			dentists,
 			timeNow.Format("2006-01-02"),

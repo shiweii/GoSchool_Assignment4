@@ -1,17 +1,6 @@
-{{template "header"}}
+{{template "header" .}}
 
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/">Home</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Search for available appointments</li>
-  </ol>
-</nav>
-
-{{if ne .LoggedInUser.Role "admin"}}
-<div class="alert alert-primary" role="alert">Logged in as: {{.LoggedInUser.FirstName}} {{.LoggedInUser.LastName}}</div>
-{{end}}
-
-<h2>Search for available appointments</h2>
+<h2>Search Available Appointment</h2>
 <div class="container bg-light border p-4">
   <div class="row">
     <div class="col">
@@ -29,8 +18,8 @@
             <input type="date" class="form-control" id="inputDate" name="inputDate" required>
         </div>
         <div class="col-12">
-            <button type="button" class="btn btn-primary" onclick="myFunction()">Clear</button>
             <button type="submit" class="btn btn-primary">Search</button>
+            <button type="button" class="btn btn-primary" onclick="myFunction()">Clear</button>
         </div>
       </form>
     </div>

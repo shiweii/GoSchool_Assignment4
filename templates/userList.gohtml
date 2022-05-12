@@ -1,12 +1,4 @@
-{{template "header"}}
-
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/">Home</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Manage Users</li>
-  </ol>
-</nav>
-
+{{template "header" .}}
 
 <h2>Manage Users</h2>
 {{ if .ErrorDelete }}
