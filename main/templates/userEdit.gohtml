@@ -18,10 +18,7 @@
 <form method="post">
     <div class="mb-3">
         <label class="form-label" for="username">Username:</label>
-        <input {{if eq .ValidateUsername true}} class="form-control" {{else}} class="form-control is-invalid" {{end}}  type="text" id="username" name="username" value="{{.UserData.Username}}" disabled>
-        <div class="invalid-feedback">
-            {{.MessageUsername}}
-        </div>
+        <input class="form-control" type="text" id="username" name="username" value="{{.UserData.Username}}" disabled>
     </div>
     <div class="mb-3">
         <label class="form-label" for="firstName">First name:</label>

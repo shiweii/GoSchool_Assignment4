@@ -1,15 +1,13 @@
-{{template "header" .PageTitle}}
+{{template "header" .}}
 
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="/">Home</a></li>
     <li class="breadcrumb-item"><a href="/appointments">Manage Appointment</a></li>
     <li class="breadcrumb-item active" aria-current="page">Cancel Appointment</li>
   </ol>
 </nav>
 
 <h1>Cancel Appointment</h1>
-<div class="alert alert-primary" role="alert">{{.LoggedInUser.FirstName}} {{.LoggedInUser.LastName}}</div>
 {{ if .Successful }}
     <div class="alert alert-success" role="alert">Appointment canceled successfully</div>
 {{end}}

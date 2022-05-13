@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"GoSchool_Assignment4/logger"
 	"bufio"
 	"crypto/sha256"
 	"encoding/hex"
@@ -14,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/shiweii/logger"
 
 	"github.com/joho/godotenv"
 	"golang.org/x/text/cases"
@@ -90,17 +91,6 @@ func ReadInputAsInt() (int, error) {
 	} else {
 		return 0, errors.New("please enter a valid selection")
 	}
-}
-
-func ValidateMobileNumber(mobileNum int) bool {
-	var ret bool = false
-	str := strconv.Itoa(mobileNum)
-	if len(str) == 8 {
-		if str[0:1] == "8" || str[0:1] == "9" {
-			ret = true
-		}
-	}
-	return ret
 }
 
 func LevenshteinDistance(s, t string) int {

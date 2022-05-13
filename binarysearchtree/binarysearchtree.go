@@ -1,3 +1,4 @@
+// Package binarysearchtree comains function that store data in binarysearchtree
 package binarysearchtree
 
 import (

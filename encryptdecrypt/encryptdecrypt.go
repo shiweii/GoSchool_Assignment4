@@ -1,14 +1,15 @@
 package encryptdecrypt
 
 import (
-	"GoSchool_Assignment4/logger"
-	util "GoSchool_Assignment4/utility"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"io"
 	"io/ioutil"
 	"os"
+
+	"github.com/shiweii/logger"
+	util "github.com/shiweii/utility"
 )
 
 /*

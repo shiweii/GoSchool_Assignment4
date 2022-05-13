@@ -1,16 +1,18 @@
 package main
 
 import (
-	bst "GoSchool_Assignment4/binarysearchtree"
-	dll "GoSchool_Assignment4/doublylinkedlist"
-	ede "GoSchool_Assignment4/encryptdecrypt"
-	"GoSchool_Assignment4/logger"
-	util "GoSchool_Assignment4/utility"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
+
+	app "github.com/shiweii/appointment"
+	bst "github.com/shiweii/binarysearchtree"
+	dll "github.com/shiweii/doublylinkedlist"
+	ede "github.com/shiweii/encryptdecrypt"
+	"github.com/shiweii/logger"
+	"github.com/shiweii/user"
+	util "github.com/shiweii/utility"
 
 	"github.com/gorilla/mux"
 )
@@ -35,7 +37,6 @@ func init() {
 }
 
 func main() {
-
 	logger.Info.Println("Server Start...")
 
 	sigchan := make(chan os.Signal, 1)
@@ -55,22 +56,22 @@ func main() {
 	)
 
 	// Initialize Sample Data
-	appointmentSessionList.Add(AppointmentSession{1, "09:00", "10:00", true})
-	appointmentSessionList.Add(AppointmentSession{2, "10:00", "11:00", true})
-	appointmentSessionList.Add(AppointmentSession{3, "11:00", "12:00", true})
-	appointmentSessionList.Add(AppointmentSession{4, "13:00", "14:00", true})
-	appointmentSessionList.Add(AppointmentSession{5, "14:00", "15:00", true})
-	appointmentSessionList.Add(AppointmentSession{6, "15:00", "16:00", true})
-	appointmentSessionList.Add(AppointmentSession{7, "16:00", "17:00", true})
+	appointmentSessionList.Add(app.AppointmentSession{1, "09:00", "10:00", true})
+	appointmentSessionList.Add(app.AppointmentSession{2, "10:00", "11:00", true})
+	appointmentSessionList.Add(app.AppointmentSession{3, "11:00", "12:00", true})
+	appointmentSessionList.Add(app.AppointmentSession{4, "13:00", "14:00", true})
+	appointmentSessionList.Add(app.AppointmentSession{5, "14:00", "15:00", true})
+	appointmentSessionList.Add(app.AppointmentSession{6, "15:00", "16:00", true})
+	appointmentSessionList.Add(app.AppointmentSession{7, "16:00", "17:00", true})
 
 	// Loading Data from JSON
-	users := getUserData()
+	users := user.GetEncryptedUserData()
 	for _, user := range users {
 		userList.Add(user)
 	}
 	userList.InsertionSort()
 
-	appointments := getAppointmentData()
+	appointments := app.GetAppointmentData()
 	for _, v := range appointments {
 		patient := userList.FindByUsername(v.Patient)
 		dentist := userList.FindByUsername(v.Dentist)
@@ -105,33 +106,4 @@ func main() {
 	router.HandleFunc("/sessions", sessionListHandler(&userList))
 
 	http.ListenAndServe(util.GetEnvVar("PORT"), router)
-}
-
-func indexHandler(userList **dll.DoublyLinkedlist) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		defer func() {
-			if err := recover(); err != nil {
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
-				http.Redirect(res, req, "/", http.StatusInternalServerError)
-				return
-			}
-		}()
-
-		myUser := getUser(res, req, userList)
-		if alreadyLoggedIn(req, userList) {
-			http.Redirect(res, req, "/appointments", http.StatusSeeOther)
-			return
-		}
-
-		ViewData := struct {
-			LoggedInUser *User
-			PageTitle    string
-		}{
-			myUser,
-			"Central City Dentist Clinic",
-		}
-
-		tpl.ExecuteTemplate(res, "index.gohtml", ViewData)
-	}
 }
