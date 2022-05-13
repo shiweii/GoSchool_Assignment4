@@ -33,5 +33,8 @@ func init() {
 }
 
 func CloseLogger() {
-	file.Close()
+	err := file.Close()
+	if err != nil {
+		return
+	}
 }

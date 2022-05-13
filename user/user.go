@@ -64,7 +64,7 @@ func AddUserDate(u *User) {
 
 func UpdateUserData(oldUser *User, newUser *User) {
 	ede.DecryptFile(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
-	var users []*User = getUserData()
+	var users = getUserData()
 	for k, v := range users {
 		if reflect.DeepEqual(v, oldUser) {
 			users[k] = newUser
@@ -80,7 +80,7 @@ func UpdateUserData(oldUser *User, newUser *User) {
 
 func DeleteUserData(delUser *User) {
 	ede.DecryptFile(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
-	var users []*User = getUserData()
+	var users = getUserData()
 	for k, v := range users {
 		if v.Username == delUser.Username {
 			users[k] = delUser

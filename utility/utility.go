@@ -1,16 +1,13 @@
 package utility
 
 import (
-	"bufio"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -60,38 +57,21 @@ func computeSHA256(file string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			logger.Error.Println(err)
+		}
+	}(f)
 
-	hasher := sha256.New()
-	if _, err := io.Copy(hasher, f); err != nil {
+	harsher := sha256.New()
+	if _, err := io.Copy(harsher, f); err != nil {
 		return "", err
 	}
-	return hex.EncodeToString(hasher.Sum(nil)), nil
+	return hex.EncodeToString(harsher.Sum(nil)), nil
 }
 
-func ReadInput() string {
-	inputReader := bufio.NewReader(os.Stdin)
-	v, _ := inputReader.ReadString('\n')
-	v = strings.TrimSpace(v)
-	return v
-}
-
-// Read input and parse as int, false if user entered non integer
-func ReadInputAsInt() (int, error) {
-	inputReader := bufio.NewReader(os.Stdin)
-	input, err := inputReader.ReadString('\n')
-	if err != nil {
-		return 0, err
-	}
-
-	input = strings.TrimSpace(input)
-	// Check that user input valid selection
-	if value, err := strconv.Atoi(input); err == nil {
-		return value, nil
-	} else {
-		return 0, errors.New("please enter a valid selection")
-	}
-}
+// ReadInputAsInt Read input and parse as int, false if user entered non integer
 
 func LevenshteinDistance(s, t string) int {
 	// Change string to lower case for accurate comparison

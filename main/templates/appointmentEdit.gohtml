@@ -24,16 +24,16 @@
 {{$dentist := .Appointment.Dentist.Username}}
 {{$selDentist := .SelectedDentist}}
 <form method="post">
-    Select Dentist:
-    <select class="form-select" name="apptDentist" id="apptDentist">
+    <label for="appDentist">Select Dentist:</label>
+    <select class="form-select" name="appDentist" id="appDentist">
         {{range $key, $val := .Dentists}}
             <option value="{{$val.Username}}" {{if eq $selDentist $val.Username}}selected{{end}}>Dr. {{$val.FirstName}} {{$val.LastName}}</option>
         {{end}}
     </select>
     <br/>
     <div class="mb-3">
-        <label class="form-label" for="apptDate">Select date to view dentist's availability:</label>
-        <input type="date" class="form-control" id="apptDate" name="apptDate" value="{{.Appointment.Date}}" min="{{.TodayDate}}"> 
+        <label class="form-label" for="appDate">Select date to view dentist's availability:</label>
+        <input type="date" class="form-control" id="appDate" name="appDate" value="{{.Appointment.Date}}" min="{{.TodayDate}}">
     </div>
     <button type="submit" class="btn btn-primary">Search</button>
     <br/><br/>

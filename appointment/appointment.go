@@ -28,10 +28,10 @@ type AppointmentSession struct {
 	Available bool
 }
 
-func NewAppointment(id int, pateint, dentist, date string, session int) *Appointment {
+func NewAppointment(id int, patient, dentist, date string, session int) *Appointment {
 	return &Appointment{
 		ID:      id,
-		Patient: pateint,
+		Patient: patient,
 		Dentist: dentist,
 		Date:    date,
 		Session: session,
@@ -59,11 +59,11 @@ func AddAppointmentData(a *Appointment) {
 	}
 }
 
-func UpdateAppointmentData(oldAppointment *Appointment, editiedAppointment *Appointment) {
-	var appointments []*Appointment = GetAppointmentData()
+func UpdateAppointmentData(oldAppointment *Appointment, editedAppointment *Appointment) {
+	var appointments = GetAppointmentData()
 	for k, v := range appointments {
 		if reflect.DeepEqual(v, oldAppointment) {
-			appointments[k] = editiedAppointment
+			appointments[k] = editedAppointment
 		}
 	}
 	JSONData, _ := json.MarshalIndent(appointments, "", " ")
@@ -94,24 +94,24 @@ func remove(slice []*Appointment, s int) []*Appointment {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-// Function to get duplicates from search results
+// GetDuplicate Function to get duplicates from search results
 func GetDuplicate(list []*bst.BinaryNode, count int) []*bst.BinaryNode {
 
 	var temp []*bst.BinaryNode
-	duplicate_frequency := make(map[*bst.BinaryNode]int)
+	duplicateFrequency := make(map[*bst.BinaryNode]int)
 
 	for _, item := range list {
 		// check if the item/element exist in the duplicate_frequency map
-		_, exist := duplicate_frequency[item]
+		_, exist := duplicateFrequency[item]
 		if exist {
 			// increase counter by 1 if already in the map
-			duplicate_frequency[item] += 1
+			duplicateFrequency[item] += 1
 		} else {
 			// else start counting from 1
-			duplicate_frequency[item] = 1
+			duplicateFrequency[item] = 1
 		}
 	}
-	for v, n := range duplicate_frequency {
+	for v, n := range duplicateFrequency {
 		if n == count {
 			temp = append(temp, v)
 		}
@@ -119,9 +119,9 @@ func GetDuplicate(list []*bst.BinaryNode, count int) []*bst.BinaryNode {
 	return temp
 }
 
-// Run as Go routine to block users from booking the same dentist on the same date and session
-func CreateNewAppointment(id int, date string, session int, dentist interface{}, pateint *user.User, appointmentTree **bst.BinarySearchTree, chn chan bool) {
-	var sessionBooked bool = false
+// CreateNewAppointment Run as Go routine to block users from booking the same dentist on the same date and session
+func CreateNewAppointment(id int, date string, session int, dentist interface{}, patient *user.User, appointmentTree **bst.BinarySearchTree, chn chan bool) {
+	var sessionBooked = false
 	// Check if appointment is booked
 	appointments := (**appointmentTree).GetAppointmentByDate(date, "dentist", dentist)
 	for _, v := range appointments {
@@ -132,12 +132,12 @@ func CreateNewAppointment(id int, date string, session int, dentist interface{},
 	}
 	// If slot is not booked, proceed.
 	if !sessionBooked {
-		(**appointmentTree).Add(id, date, session, dentist, pateint)
+		(**appointmentTree).Add(id, date, session, dentist, patient)
 		chn <- true
 	}
 }
 
-func GetDentistAvailability(appointmentSessionList **dll.DoublyLinkedlist, appointmentTree **bst.BinarySearchTree, appointmentDate time.Time, Dentist *user.User) []AppointmentSession {
+func GetDentistAvailability(appointmentSessionList **dll.DoublyLinkedList, appointmentTree **bst.BinarySearchTree, appointmentDate time.Time, Dentist *user.User) []AppointmentSession {
 	var sessionList []AppointmentSession
 	appointments := (**appointmentTree).GetAppointmentByDate(appointmentDate.Format("2006-01-02"), Dentist.Role, Dentist)
 	retSessionList := (**appointmentSessionList).GetList()

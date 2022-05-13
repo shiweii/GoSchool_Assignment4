@@ -12,24 +12,24 @@ type node struct {
 	next     *node
 }
 
-type DoublyLinkedlist struct {
+type DoublyLinkedList struct {
 	head *node
 	tail *node
 	size int
 }
 
 // New will return a newly created instance of a doubly linked list
-func New() *DoublyLinkedlist {
-	list := &DoublyLinkedlist{nil, nil, 0}
+func New() *DoublyLinkedList {
+	list := &DoublyLinkedList{nil, nil, 0}
 	return list
 }
 
-// Get Size of linked list
-func (list *DoublyLinkedlist) GetSize() int {
+// GetSize Get Size of linked list
+func (list *DoublyLinkedList) GetSize() int {
 	return list.size
 }
 
-func (list *DoublyLinkedlist) Add(elm interface{}) error {
+func (list *DoublyLinkedList) Add(elm interface{}) error {
 	newNode := &node{
 		value:    elm,
 		previous: nil,
@@ -51,8 +51,8 @@ func (list *DoublyLinkedlist) Add(elm interface{}) error {
 	return nil
 }
 
-func (list *DoublyLinkedlist) Remove(elm interface{}) (interface{}, error) {
-	var index int = 1
+func (list *DoublyLinkedList) Remove(elm interface{}) (interface{}, error) {
+	var index = 1
 	currentNode := list.head
 
 	for currentNode != nil {
@@ -65,7 +65,7 @@ func (list *DoublyLinkedlist) Remove(elm interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-func (list *DoublyLinkedlist) RemoveNode(index int) (interface{}, error) {
+func (list *DoublyLinkedList) RemoveNode(index int) (interface{}, error) {
 	if list.head == nil {
 		return "", errors.New("empty linked list")
 	}
@@ -100,7 +100,7 @@ func (list *DoublyLinkedlist) RemoveNode(index int) (interface{}, error) {
 	return item, nil
 }
 
-func (list *DoublyLinkedlist) GetList() []interface{} {
+func (list *DoublyLinkedList) GetList() []interface{} {
 	var values []interface{}
 	currentNode := list.head
 	if currentNode == nil {
@@ -114,7 +114,7 @@ func (list *DoublyLinkedlist) GetList() []interface{} {
 	return values
 }
 
-func (list *DoublyLinkedlist) Get(index int) interface{} {
+func (list *DoublyLinkedList) Get(index int) interface{} {
 	var value interface{}
 	currentNode := list.head
 	//if currentNode == nil {
@@ -131,7 +131,7 @@ func (list *DoublyLinkedlist) Get(index int) interface{} {
 	return value
 }
 
-func (list *DoublyLinkedlist) Clear() {
+func (list *DoublyLinkedList) Clear() {
 	list.head = nil
 	list.tail = nil
 	list.size = 0
@@ -143,14 +143,14 @@ func getFieldValue(itf interface{}, field string) interface{} {
 	return value
 }
 
-func (list *DoublyLinkedlist) FindByUsername(username string) interface{} {
+func (list *DoublyLinkedList) FindByUsername(username string) interface{} {
 	if len(username) > 0 {
 		return list.recursiveBinarySearchByUsername(list.head, list.tail, username, list.size)
 	}
 	return nil
 }
 
-func (list *DoublyLinkedlist) recursiveBinarySearchByUsername(firstNode *node, lastNode *node, value string, size int) interface{} {
+func (list *DoublyLinkedList) recursiveBinarySearchByUsername(firstNode *node, lastNode *node, value string, size int) interface{} {
 	if firstNode == nil || lastNode == nil {
 		return nil
 	}
@@ -184,7 +184,7 @@ func middleNode(start *node, mid int) *node {
 	return start
 }
 
-func (list *DoublyLinkedlist) PrintAllNodes() error {
+func (list *DoublyLinkedList) PrintAllNodes() error {
 	currentNode := list.head
 	if currentNode == nil {
 		fmt.Println("Linked list is empty.")
@@ -199,16 +199,16 @@ func (list *DoublyLinkedlist) PrintAllNodes() error {
 }
 
 // Swap value of given node
-func (list *DoublyLinkedlist) swapData(first, second *node) {
+func (list *DoublyLinkedList) swapData(first, second *node) {
 	value := first.value
 	first.value = second.value
 	second.value = value
 }
 
-// Sort elements using insertion sort
-func (list *DoublyLinkedlist) InsertionSort() {
+// InsertionSort Sort elements using insertion sort
+func (list *DoublyLinkedList) InsertionSort() {
 	// Get first node
-	var front *node = list.head
+	var front = list.head
 	var back *node = nil
 	for front != nil {
 		// Get next node
@@ -229,13 +229,13 @@ func (list *DoublyLinkedlist) InsertionSort() {
 	}
 }
 
-func (list *DoublyLinkedlist) SearchByMobileNumber(mobileNum int) interface{} {
+func (list *DoublyLinkedList) SearchByMobileNumber(mobileNum int) interface{} {
 	//var ret interface{}
 	ret := list.recursiveSeqSearchByMobileNumber(list.head, mobileNum)
 	return ret
 }
 
-func (list *DoublyLinkedlist) recursiveSeqSearchByMobileNumber(node *node, value int) interface{} {
+func (list *DoublyLinkedList) recursiveSeqSearchByMobileNumber(node *node, value int) interface{} {
 	if node == nil {
 		return nil
 	} else {

@@ -2,12 +2,12 @@
 
 <h1>Create New Appointment</h1>
 <h3>Select Date & Time</h3>
-<div>Selected Dentist : <b>Dr. {{.Dentist.FirstName}} {{.Dentist.LastName}}</b>
+<div>Selected Dentist : <b>Dr. {{.Dentist.FirstName}} {{.Dentist.LastName}}</b></div>
 <br/><br/>
 <form method="post">
     <div class="mb-3">
-      <label class="form-label" for="apptDate">Select date to view dentist's availability:</label>
-      <input type="date" class="form-control" id="apptDate" name="apptDate" value="{{.TodayDate}}" min="{{.TodayDate}}">
+      <label class="form-label" for="appDate">Select date to view dentist's availability:</label>
+      <input type="date" class="form-control" id="appDate" name="appDate" value="{{.TodayDate}}" min="{{.TodayDate}}">
     </div>
     <button type="submit" class="btn btn-primary">Search</button>
     <br/><br/>

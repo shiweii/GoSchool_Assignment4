@@ -30,7 +30,7 @@ var (
 
 func init() {
 	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*"))
-	// Go routine to verify .env checksum every 5 munutes
+	// Go routine to verify .env checksum every 5 minutes
 	go util.VerifyCheckSum()
 	// Go Routine to perform encryption if file was left decrypted due to panic
 	go ede.CheckEncryption(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
@@ -39,16 +39,16 @@ func init() {
 func main() {
 	logger.Info.Println("Server Start...")
 
-	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, os.Interrupt)
+	sigchld := make(chan os.Signal, 1)
+	signal.Notify(sigchld, os.Interrupt)
 	go func() {
-		<-sigchan
+		<-sigchld
 		logger.Info.Println("Server Stop...")
 		logger.CloseLogger()
 		os.Exit(0)
 	}()
 
-	// Initialize new doubly linkedlist and binary search tree
+	// Initialize new doubly linked-list and binary search tree
 	var (
 		appointmentTree        = bst.New()
 		userList               = dll.New()
@@ -56,18 +56,18 @@ func main() {
 	)
 
 	// Initialize Sample Data
-	appointmentSessionList.Add(app.AppointmentSession{1, "09:00", "10:00", true})
-	appointmentSessionList.Add(app.AppointmentSession{2, "10:00", "11:00", true})
-	appointmentSessionList.Add(app.AppointmentSession{3, "11:00", "12:00", true})
-	appointmentSessionList.Add(app.AppointmentSession{4, "13:00", "14:00", true})
-	appointmentSessionList.Add(app.AppointmentSession{5, "14:00", "15:00", true})
-	appointmentSessionList.Add(app.AppointmentSession{6, "15:00", "16:00", true})
-	appointmentSessionList.Add(app.AppointmentSession{7, "16:00", "17:00", true})
+	appointmentSessionList.Add(app.AppointmentSession{Num: 1, StartTime: "09:00", EndTime: "10:00", Available: true})
+	appointmentSessionList.Add(app.AppointmentSession{Num: 2, StartTime: "10:00", EndTime: "11:00", Available: true})
+	appointmentSessionList.Add(app.AppointmentSession{Num: 3, StartTime: "11:00", EndTime: "12:00", Available: true})
+	appointmentSessionList.Add(app.AppointmentSession{Num: 4, StartTime: "13:00", EndTime: "14:00", Available: true})
+	appointmentSessionList.Add(app.AppointmentSession{Num: 5, StartTime: "14:00", EndTime: "15:00", Available: true})
+	appointmentSessionList.Add(app.AppointmentSession{Num: 6, StartTime: "15:00", EndTime: "16:00", Available: true})
+	appointmentSessionList.Add(app.AppointmentSession{Num: 7, StartTime: "16:00", EndTime: "17:00", Available: true})
 
 	// Loading Data from JSON
 	users := user.GetEncryptedUserData()
-	for _, user := range users {
-		userList.Add(user)
+	for _, userObj := range users {
+		userList.Add(userObj)
 	}
 	userList.InsertionSort()
 
@@ -105,5 +105,8 @@ func main() {
 	// Admin
 	router.HandleFunc("/sessions", sessionListHandler(&userList))
 
-	http.ListenAndServe(util.GetEnvVar("PORT"), router)
+	err := http.ListenAndServe(util.GetEnvVar("PORT"), router)
+	if err != nil {
+		logger.Fatal.Fatalln(err)
+	}
 }

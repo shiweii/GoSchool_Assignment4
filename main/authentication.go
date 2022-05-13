@@ -9,12 +9,12 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func authenticationCheck(res http.ResponseWriter, req *http.Request, userList **dll.DoublyLinkedlist, checkAdmin bool) (*user.User, bool, int) {
+func authenticationCheck(res http.ResponseWriter, req *http.Request, userList **dll.DoublyLinkedList, checkAdmin bool) (*user.User, bool, int) {
 	// Check if users is logged in
 	if !alreadyLoggedIn(req, userList) {
 		return nil, true, http.StatusSeeOther
 	}
-	// Get info of logged in user
+	// Get info of logged-in user
 	myUser := getUser(res, req, userList)
 	if myUser == nil {
 		return nil, true, http.StatusSeeOther
@@ -28,7 +28,7 @@ func authenticationCheck(res http.ResponseWriter, req *http.Request, userList **
 	return myUser, false, 0
 }
 
-func alreadyLoggedIn(req *http.Request, userList **dll.DoublyLinkedlist) bool {
+func alreadyLoggedIn(req *http.Request, userList **dll.DoublyLinkedList) bool {
 	myCookie, err := req.Cookie("myCookie")
 	if err != nil {
 		return false
@@ -39,7 +39,7 @@ func alreadyLoggedIn(req *http.Request, userList **dll.DoublyLinkedlist) bool {
 	return ret != nil
 }
 
-func getUser(res http.ResponseWriter, req *http.Request, userList **dll.DoublyLinkedlist) *user.User {
+func getUser(res http.ResponseWriter, req *http.Request, userList **dll.DoublyLinkedList) *user.User {
 	// get current session cookie
 	myCookie, err := req.Cookie("myCookie")
 	if err != nil {

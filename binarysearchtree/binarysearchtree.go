@@ -1,4 +1,4 @@
-// Package binarysearchtree comains function that store data in binarysearchtree
+// Package binarysearchtree contains function that store data in binarysearchtree
 package binarysearchtree
 
 import (
@@ -38,7 +38,7 @@ func (bst *BinarySearchTree) Add(id int, date string, session int, dentist inter
 func (bst *BinarySearchTree) insertNode(t **BinaryNode, date string, session int, dentist interface{}, patient interface{}, id int) {
 	if (*t) == nil {
 		newNode := &BinaryNode{id, dentist, patient, date, session, nil, nil}
-		(*t) = newNode
+		*t = newNode
 	} else {
 		if date < (*t).Date {
 			bst.insertNode(&(*t).left, date, session, dentist, patient, id) // dereferencing
@@ -84,8 +84,8 @@ func (bst *BinarySearchTree) removeNode(t **BinaryNode, removeNode *BinaryNode) 
 		} else if (*t).right == nil {
 			return (*t).left, nil
 		} else { // 3rd case of 2 children
-			(*t) = bst.findSuccessor((*t).left)
-			removeNode = (*t)
+			*t = bst.findSuccessor((*t).left)
+			removeNode = *t
 			(*t).left, _ = bst.removeNode(&(*t).left, removeNode)
 		}
 	}
@@ -105,7 +105,7 @@ func size(node *BinaryNode) int {
 	if node == nil {
 		return 0
 	} else {
-		return (size(node.left) + 1 + size(node.right))
+		return size(node.left) + 1 + size(node.right)
 	}
 }
 
@@ -126,7 +126,7 @@ func containsTraversal(t *BinaryNode, n BinaryNode) bool {
 }
 
 func (bst *BinarySearchTree) GetAppointmentByDate(date, role string, searchInterface interface{}) []*BinaryNode {
-	list := []*BinaryNode{}
+	var list []*BinaryNode
 	bst.searchAppointmentByDate(bst.root, date, role, searchInterface, &list)
 	return list
 }
@@ -172,14 +172,14 @@ func (bst *BinarySearchTree) searchAppointmentByDate(t *BinaryNode, date, role s
 }
 
 func (bst *BinarySearchTree) GetAllAppointments(searchInterface interface{}, role string) []*BinaryNode {
-	list := []*BinaryNode{}
+	var list []*BinaryNode
 	oldDate := time.Now().AddDate(-100, 0, 0)
 	bst.searchAppointments(bst.root, oldDate.Format("2006-01-02"), searchInterface, role, &list)
 	return list
 }
 
 func (bst *BinarySearchTree) GetUpComingAppointments(searchInterface interface{}, role string) []*BinaryNode {
-	list := []*BinaryNode{}
+	var list []*BinaryNode
 	currentTime := time.Now()
 	bst.searchAppointments(bst.root, currentTime.Format("2006-01-02"), searchInterface, role, &list)
 	return list
@@ -207,7 +207,7 @@ func (bst *BinarySearchTree) searchAppointments(t *BinaryNode, date string, sear
 }
 
 func (bst *BinarySearchTree) SearchAllByField(field string, value interface{}, channel chan []*BinaryNode) {
-	list := []*BinaryNode{}
+	var list []*BinaryNode
 	bst.searchInOrderTraversal(bst.root, field, value, &list)
 	channel <- list
 }

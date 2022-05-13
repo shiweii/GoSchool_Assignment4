@@ -13,7 +13,7 @@ import (
 )
 
 /*
-	File might remains decrypted if a panic occur,
+	File might remain decrypted if a panic occur,
 	this function will encrypt the file.
 */
 func CheckEncryption(encryptedFile string, decryptedFile string) {
