@@ -1,6 +1,7 @@
 {{template "header" .}}
 
-<h1>New Appointment Details</h1>
+<h2>New Appointment Details</h2>
+<br/>
 {{ if .FormSubmitted}}
   {{ if .Successful }}
       <div class="alert alert-success" role="alert">Appointment created successfully</div>
@@ -9,14 +10,14 @@
       <div class="alert alert-danger" role="alert">Error: Appointment not created, <a href="/appointment_create">click here</a> to make another appointment</div>
   {{end}}
 {{end}}
-<h2>Appointment Detail</h2>
+<h3>Appointment Detail</h3>
 <div>Dentist: <b>Dr. {{.Dentist.FirstName}} {{.Dentist.LastName}}</b></div>
 <div>Date: <b>{{.Date | formatDate}} ({{.Date | getDay}})</b></div>
 <div>Time: <b>{{.StartTime}} - {{.EndTime}}</b></div>
 <br />
 <form method="post">
     {{if not .FormSubmitted}}
-      <a class="btn btn-primary" href="/" role="button">Cancel</a>&nbsp;&nbsp;<button type="submit" class="btn btn-primary">Confirm</button>
+      <a class="btn btn-danger" href="/" role="button">Cancel</a>&nbsp;&nbsp;<button type="submit" class="btn btn-primary">Confirm</button>
     {{end}}
     {{ if .FormSubmitted}}
       {{if .Successful}}

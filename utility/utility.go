@@ -28,27 +28,29 @@ func GetEnvVar(v string) string {
 
 func VerifyCheckSum() {
 	for {
-		logChecksum, err := ioutil.ReadFile("data/checksum")
+		logChecksum, err := ioutil.ReadFile(GetEnvVar("CHECKSUM_FILE"))
 		if err != nil {
 			logger.Error.Println(err)
 		}
 		// convert content to a 'string'
 		str := string(logChecksum)
 		// Compute our current log's SHA256 hash
-		hash, err := computeSHA256(".env")
+		hash, err := computeSHA256(GetEnvVar("CHECKSUM_FILE_TO_VERIFY"))
 		if err != nil {
 			logger.Error.Println(err)
 		} else {
 			// Compare our calculated hash with our stored hash
 			if str == hash {
 				// Ok the checksums match.
-				logger.Info.Println(".env file integrity OK.")
+				logger.Info.Println("File integrity OK.")
 			} else {
 				// The file integrity has been compromised...
 				logger.Warning.Println("File Tampering detected.")
 			}
 		}
-		time.Sleep(5 * time.Minute)
+		//env := GetEnvVar("CHECKSUM_TIMER")
+		//timer, _ := strconv.Atoi(env)
+		time.Sleep(10 * time.Minute)
 	}
 }
 

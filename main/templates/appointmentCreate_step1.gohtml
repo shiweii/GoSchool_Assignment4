@@ -1,7 +1,8 @@
 {{template "header" .}}
 
-<h1>Create New Appointment</h1>
-<h2>Select a Dentist</h2>
+<h2>Create New Appointment</h2>
+<br/>
+<h3>Select a Dentist</h3>
 <div class="list-group">
     {{range $key, $val := .Dentists}}
         <a href="/appointment/create/{{$val.Username}}" class="list-group-item list-group-item-action">Dr. {{$val.FirstName}} {{$val.LastName}}</a>

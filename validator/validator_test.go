@@ -18,55 +18,141 @@ func TestIsEmpty(t *testing.T) {
 	}
 }
 
-func TestIsAlphabet(t *testing.T) {
-	got := IsAlphabet("abcd")
+func TestIsValidName(t *testing.T) {
+	got := IsValidName("Sam")
 	res := true
 	if got != res {
-		t.Errorf("IsAlphabet(abcd) = %t; want %t got %t", got, res, got)
+		t.Errorf("IsAlphabet(\"Sam\") = %t; want %t got %t", got, res, got)
 	}
 
-	got = IsAlphabet("Hello World")
-	res = false
+	got = IsValidName("Henry V")
+	res = true
 	if got != res {
-		t.Errorf("IsAlphabet(Hello World) = %t; want %t got %t", got, res, got)
+		t.Errorf("IsAlphabet(\"Henry V\") = %t; want %t got %t", got, res, got)
 	}
 
-	got = IsAlphabet("12345")
+	got = IsValidName("Henry .Jr")
+	res = true
+	if got != res {
+		t.Errorf("IsAlphabet(\"Henry .Jr\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidName("Henry 5")
 	res = false
 	if got != res {
-		t.Errorf("IsAlphabet(12345) = %t; want %t got %t", got, res, got)
+		t.Errorf("IsAlphabet(\"Henry 5\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidName("HenrysØn")
+	res = false
+	if got != res {
+		t.Errorf("IsAlphabet(\"HenrysØn\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidName("<scrip>alert(1);<script>")
+	res = false
+	if got != res {
+		t.Errorf("IsValidName(\"<scrip>alert(1);<script>\") = %t; want %t got %t", got, res, got)
 	}
 }
 
-func TestIsAlphaNumeric(t *testing.T) {
-	got := IsAlphaNumeric("abc")
+func TestIsValidUsername(t *testing.T) {
+	got := IsValidUsername("lobby23")
 	res := true
 	if got != res {
-		t.Errorf("IsAlphaNumeric(abc) = %t; want %t got %t", got, res, got)
+		t.Errorf("IsValidUserName(\"lobby23\") = %t; want %t got %t", got, res, got)
 	}
 
-	got = IsAlphaNumeric("123")
+	got = IsValidUsername("lobby_23")
 	res = true
 	if got != res {
-		t.Errorf("IsAlphaNumeric(abc) = %t; want %t got %t", got, res, got)
+		t.Errorf("IsValidUserName(\"lobby_23\") = %t; want %t got %t", got, res, got)
 	}
 
-	got = IsAlphaNumeric("abc123")
+	got = IsValidUsername("lobby.23")
 	res = true
 	if got != res {
-		t.Errorf("IsAlphaNumeric(abc123) = %t; want %t got %t", got, res, got)
+		t.Errorf("IsValidUserName(\"lobby.23\") = %t; want %t got %t", got, res, got)
 	}
 
-	got = IsAlphaNumeric("abc123!@#")
-	res = false
+	got = IsValidUsername("lobby-23")
+	res = true
 	if got != res {
-		t.Errorf("IsEmpty(abc123!@#) = %t; want %t got %t", got, res, got)
+		t.Errorf("IsValidUserName(\"lobby-23\") = %t; want %t got %t", got, res, got)
 	}
 
-	got = IsAlphaNumeric("!@#")
+	got = IsValidUsername("lØbby_23")
 	res = false
 	if got != res {
-		t.Errorf("IsEmpty(!@#) = %t; want %t got %t", got, res, got)
+		t.Errorf("IsValidUserName(\"lØbby_23\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidUsername("_obby_23")
+	res = false
+	if got != res {
+		t.Errorf("IsValidUserName(\"_obby_23\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidUsername("lobby_2_")
+	res = false
+	if got != res {
+		t.Errorf("IsValidUserName(\"_obby_2_\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidUsername("lobby@23")
+	res = false
+	if got != res {
+		t.Errorf("IsValidUserName(\"lobby@23\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidUsername("<scrip>alert(1);<script>")
+	res = false
+	if got != res {
+		t.Errorf("IsValidUserName(\"<scrip>alert(1);<script>\") = %t; want %t got %t", got, res, got)
+	}
+}
+
+func TestIsValidPassword(t *testing.T) {
+	got := IsValidPassword("P@ssw0rd")
+	res := true
+	if got != res {
+		t.Errorf("IsValidPassword(\"P@ssw0rd\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidPassword("Passw0rd")
+	res = false
+	if got != res {
+		t.Errorf("IsValidPassword(\"Passw0rd\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidPassword("p@ssw0rd")
+	res = false
+	if got != res {
+		t.Errorf("IsValidPassword(\"p@ssw0rd\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidPassword("P@ssword")
+	res = false
+	if got != res {
+		t.Errorf("IsValidPassword(\"P@ssword\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidPassword("password")
+	res = false
+	if got != res {
+		t.Errorf("IsValidPassword(\"password\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidPassword("password>")
+	res = false
+	if got != res {
+		t.Errorf("IsValidPassword(\"password>\") = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsValidName("<scrip>alert(1);<script>")
+	res = false
+	if got != res {
+		t.Errorf("IsValidPassword(\"<scrip>alert(1);<script>\") = %t; want %t got %t", got, res, got)
 	}
 }
 
@@ -93,5 +179,11 @@ func TestIsMobileNumber(t *testing.T) {
 	res = false
 	if got != res {
 		t.Errorf("IsMobileNumber(8795509) = %t; want %t got %t", got, res, got)
+	}
+
+	got = IsMobileNumber("<scrip>alert(1);<script>")
+	res = false
+	if got != res {
+		t.Errorf("IsMobileNumber(\"<scrip>alert(1);<script>\") = %t; want %t got %t", got, res, got)
 	}
 }

@@ -7,7 +7,8 @@
   </ol>
 </nav>
 
-
+<h2>Change Appointment</h2>
+<br/>
 <div><b><u>Appointment Details</u></b></div>
 {{if eq .LoggedInUser.Role "admin"}}
 <div>Patient: <b>{{.Appointment.Patient.FirstName}} {{.Appointment.Patient.LastName}}</b></div>
@@ -23,22 +24,30 @@
 <hr/>
 {{$dentist := .Appointment.Dentist.Username}}
 {{$selDentist := .SelectedDentist}}
-<form method="post">
-    <label for="appDentist">Select Dentist:</label>
-    <select class="form-select" name="appDentist" id="appDentist">
-        {{range $key, $val := .Dentists}}
-            <option value="{{$val.Username}}" {{if eq $selDentist $val.Username}}selected{{end}}>Dr. {{$val.FirstName}} {{$val.LastName}}</option>
-        {{end}}
-    </select>
-    <br/>
-    <div class="mb-3">
-        <label class="form-label" for="appDate">Select date to view dentist's availability:</label>
-        <input type="date" class="form-control" id="appDate" name="appDate" value="{{.Appointment.Date}}" min="{{.TodayDate}}">
+<div class="container bg-light border p-4">
+    <div class="row">
+        <div class="col">
+            <form class="row g-3" method="post">
+                <div class="col-md-6">
+                    <label class="form-label" for="appDentist">Select Dentist:</label>
+                    <select class="form-select" name="appDentist" id="appDentist">
+                        {{range $key, $val := .Dentists}}
+                            <option value="{{$val.Username}}" {{if eq $selDentist $val.Username}}selected{{end}}>Dr. {{$val.FirstName}} {{$val.LastName}}</option>
+                        {{end}}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="appDate">Select date to view dentist's availability:</label>
+                    <input type="date" class="form-control" id="appDate" name="appDate" value="{{.Appointment.Date}}" min="{{.TodayDate}}">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </form>
+        </div>
     </div>
-    <button type="submit" class="btn btn-primary">Search</button>
-    <br/><br/>
-</form>
-
+</div>
+<br/><br/>
 <div class="list-group">
     {{$appointment := .Appointment}}
     {{$date := .SelectedDate}}

@@ -92,9 +92,9 @@ func main() {
 	router.HandleFunc("/appointments/search", appointmentSearchHandler(&userList, &appointmentSessionList, &appointmentTree))
 	router.HandleFunc("/appointment/create", appointmentCreateHandler(&userList))
 	router.HandleFunc("/appointment/create/{dentist}", appointmentCreatePart2Handler(&userList, &appointmentSessionList, &appointmentTree))
-	router.HandleFunc(`/appointment/create/{dentist}/{date:\d{4}-\d{2}-\d{2}}/{session:[0-9]+}`, appointmentCreateConfirmHandler(&userList, &appointmentSessionList, &appointmentTree))
+	router.HandleFunc(`/appointment/create/{dentist}/{date:\d{4}-\d{2}-\d{2}}/{session:[1-7]+}`, appointmentCreateConfirmHandler(&userList, &appointmentSessionList, &appointmentTree))
 	router.HandleFunc("/appointment/edit/{id:[0-9]+}", appointmentEditHandler(&userList, &appointmentSessionList, &appointmentTree))
-	router.HandleFunc(`/appointment/edit/{id:[0-9]+}/{dentist}/{date:\d{4}-\d{2}-\d{2}}/{session:[0-9]+}`, appointmentEditConfirmHandler(&userList, &appointmentSessionList, &appointmentTree))
+	router.HandleFunc(`/appointment/edit/{id:[0-9]+}/{dentist}/{date:\d{4}-\d{2}-\d{2}}/{session:[1-7]+}`, appointmentEditConfirmHandler(&userList, &appointmentSessionList, &appointmentTree))
 	router.HandleFunc("/appointment/delete/{id:[0-9]+}", appointmentDeleteHandler(&userList, &appointmentSessionList, &appointmentTree))
 
 	// User

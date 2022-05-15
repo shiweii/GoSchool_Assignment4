@@ -1,30 +1,54 @@
 {{template "header" .}}
 
-<h1>Create New Account</h1>
-<h3>Enter the following to create a new account</h3>
-<form method="post">
-    <div class="mb-3">  
-        <label class="form-label" for ="username">Username:</label>
-        <input class="form-control" type="text" name="username" placeholder="Username">
-    </div>
-    <div class="mb-3"> 
-        <label class="form-label" for ="password">Password:</label>
-        <input class="form-control" type="password" name="password" placeholder="Password" autocomplete="off">
-    </div>
-    <div class="mb-3"> 
-        <label class="form-label" for ="firstname">First name:</label>
-        <input class="form-control" type="text" name="firstname" placeholder="First Name">
-    </div>
-    <div class="mb-3"> 
-        <label class="form-label" for ="lastname">Last name:</label>
-        <input class="form-control" type="text" name="lastname" placeholder="Last Name">
-    </div>
-    <div class="mb-3"> 
-        <label class="form-label" for ="mobileNum">Mobile Number:</label>
-        <input class="form-control" type="number" name="mobileNum" placeholder="Mobile Number">
-    </div>
-    <button type="submit" class="btn btn-primary">Sign up</button>
-</form>
-<br/>
-<h5>Or <a href="/login">Login</a> if you have created an account</h5>
+<div class="container" style="max-width: 800px">
+    <h1>Create New Account</h1>
+    <h3>Enter the following to create a new account</h3>
+    <form method="post" class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label" for ="firstname">First name:</label>
+            <input class="form-control {{if not .ValidateFirstName}}is-invalid{{end}}" type="text" name="firstname" placeholder="First Name">
+            <div class="invalid-feedback">
+                Please enter a valid first name (English only).
+            </div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for ="lastname">Last name:</label>
+            <input class="form-control {{if not .ValidateLastName}}is-invalid{{end}}" type="text" name="lastname" placeholder="Last Name">
+            <div class="invalid-feedback">
+                Please enter a valid last name (English only).
+            </div>
+        </div>
+        <div class="col-12">
+            <label class="form-label" for ="username">Username:</label>
+            <input class="form-control {{if not .ValidateUserName}}is-invalid{{end}}" type="text" name="username" placeholder="Username">
+            <div class="invalid-feedback">
+                {{.UserNameErrorMsg}}
+            </div>
+        </div>
+        <div class="col-12">
+            <label class="form-label" for ="password">Password:</label>
+            <input class="form-control {{if not .ValidatePassword}}is-invalid{{end}}" type="password" name="password" placeholder="Password" autocomplete="off">
+            <div class="invalid-feedback">
+                Your password is not strong enough. New passwords must:
+                <ul>
+                    <li>Be at least 7 characters long</li>
+                    <li>Contain at least 1 upper case character</li>
+                    <li>Include at least one of the following special characters: !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-12">
+            <label class="form-label" for ="mobileNum">Mobile Number:</label>
+            <input class="form-control {{if not .ValidateMobileNumber}}is-invalid{{end}}" type="number" name="mobileNum" placeholder="Mobile Number">
+            <div class="invalid-feedback">
+                Please enter a valid mobile number.
+            </div>
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Sign up</button>
+        </div>
+    </form>
+    <br/>
+    <h5>Or <a href="/login">Login</a> if you have created an account</h5>
+</div>
 {{template "footer"}}

@@ -12,8 +12,9 @@ var (
 	Trace   *log.Logger // Just about anything
 	Info    *log.Logger // Important information
 	Warning *log.Logger // Be concerned
-	Error   *log.Logger // Critical problem)
-	Fatal   *log.Logger
+	Error   *log.Logger // Critical problem
+	Panic   *log.Logger // When encounter panic
+	Fatal   *log.Logger // Failure
 	file    *os.File
 	err     error
 )
@@ -29,6 +30,7 @@ func init() {
 	Info = log.New(io.MultiWriter(file, os.Stderr), "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	Warning = log.New(io.MultiWriter(file, os.Stderr), "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
 	Error = log.New(io.MultiWriter(file, os.Stderr), "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Panic = log.New(io.MultiWriter(file, os.Stderr), "PANIC: ", log.Ldate|log.Ltime|log.Lshortfile)
 	Fatal = log.New(io.MultiWriter(file, os.Stderr), "FATAL: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
 

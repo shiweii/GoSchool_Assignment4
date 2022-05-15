@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	dll "github.com/shiweii/doublylinkedlist"
 	"github.com/shiweii/user"
@@ -12,6 +13,15 @@ import (
 func authenticationCheck(res http.ResponseWriter, req *http.Request, userList **dll.DoublyLinkedList, checkAdmin bool) (*user.User, bool, int) {
 	// Check if users is logged in
 	if !alreadyLoggedIn(req, userList) {
+		// Expire cookie to prevent attacker from reusing this cookie
+		myCookie, _ := req.Cookie("myCookie")
+		myCookie = &http.Cookie{
+			Path:    "/",
+			Name:    "myCookie",
+			MaxAge:  -1,
+			Expires: time.Now().Add(-100 * time.Hour),
+		}
+		http.SetCookie(res, myCookie)
 		return nil, true, http.StatusSeeOther
 	}
 	// Get info of logged-in user
@@ -50,13 +60,21 @@ func getUser(res http.ResponseWriter, req *http.Request, userList **dll.DoublyLi
 		}
 		http.SetCookie(res, myCookie)
 	}
-
 	// if the user exists already, get user
 	var myUser *user.User
 	if username, ok := mapSessions[myCookie.Value]; ok {
 		ret := (**userList).FindByUsername(username)
 		myUser = ret.(*user.User)
 	}
-
 	return myUser
+}
+
+func killOtherSession(newCookie *http.Cookie) {
+	for k, v := range mapSessions {
+		sessionID := newCookie.Value
+		username := mapSessions[newCookie.Value]
+		if k != sessionID && v == username {
+			delete(mapSessions, k)
+		}
+	}
 }

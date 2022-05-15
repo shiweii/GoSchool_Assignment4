@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -34,8 +32,7 @@ func indexHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
+				logger.Panic.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
@@ -55,7 +52,10 @@ func indexHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			"Central City Dentist Clinic",
 		}
 
-		tpl.ExecuteTemplate(res, "index.gohtml", ViewData)
+		err := tpl.ExecuteTemplate(res, "index.gohtml", ViewData)
+		if err != nil {
+			logger.Info.Printf("indexHandler: %v", err)
+		}
 	}
 }
 
@@ -64,8 +64,7 @@ func signupHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 		defer func() {
 			if err := recover(); err != nil {
 				ede.CheckEncryption(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
+				logger.Panic.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
@@ -79,62 +78,108 @@ func signupHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 		var myUser user.User
 
 		ViewData := struct {
-			LoggedInUser *user.User
-			PageTitle    string
+			LoggedInUser         *user.User
+			PageTitle            string
+			ValidateFirstName    bool
+			ValidateLastName     bool
+			ValidateUserName     bool
+			UserNameErrorMsg     string
+			ValidatePassword     bool
+			ValidateMobileNumber bool
 		}{
 			nil,
 			"Sign Up",
+			true,
+			true,
+			true,
+			"",
+			true,
+			true,
 		}
+
 		// process form submission
 		if req.Method == http.MethodPost {
 			// get form values
-			username := req.FormValue("username")
-			password := req.FormValue("password")
-			firstname := req.FormValue("firstname")
-			lastname := req.FormValue("lastname")
-			mobileNumber := req.FormValue("mobileNum")
-			mobileNum, _ := strconv.Atoi(mobileNumber)
+			inputUserName := strings.TrimSpace(req.FormValue("username"))
+			inputPassword := strings.TrimSpace(req.FormValue("password"))
+			inputFirstName := strings.TrimSpace(req.FormValue("firstname"))
+			inputLastName := strings.TrimSpace(req.FormValue("lastname"))
+			inputMobile := strings.TrimSpace(req.FormValue("mobileNum"))
 
-			if username != "" {
-				// check if username exist/ taken
-				userItf := (**userList).FindByUsername(username)
-				if userItf != nil {
-					http.Error(res, "Username already taken", http.StatusForbidden)
-					return
-				}
-				// create session
-				id := uuid.NewV4()
-				myCookie := &http.Cookie{
-					Name:  "myCookie",
-					Value: id.String(),
-				}
-				http.SetCookie(res, myCookie)
-				mapSessions[myCookie.Value] = username
+			logger.Info.Printf("signupHandler: Username: %v, FirstName: %v, LastName: %v, MobileNumber: %v", inputUserName, inputFirstName, inputLastName, inputMobile)
 
-				bPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
-				if err != nil {
-					http.Error(res, "Internal server error", http.StatusInternalServerError)
-					return
-				}
-
-				myUser.Username = username
-				myUser.Password = string(bPassword)
-				myUser.FirstName = firstname
-				myUser.LastName = lastname
-				myUser.Role = enumPatient
-				myUser.MobileNumber = mobileNum
-
-				// Add into linklist and JSON
-				(**userList).Add(&myUser)
-				(**userList).InsertionSort()
-				user.AddUserDate(&myUser)
+			//Validate Fields
+			if validator.IsEmpty(inputFirstName) || !validator.IsValidName(inputFirstName) {
+				ViewData.ValidateFirstName = false
 			}
-			// redirect to patient landing page
-			http.Redirect(res, req, "/appointments", http.StatusSeeOther)
-			return
+			if validator.IsEmpty(inputFirstName) || !validator.IsValidName(inputLastName) {
+				ViewData.ValidateLastName = false
+			}
+			if validator.IsEmpty(inputUserName) || !validator.IsValidUsername(inputUserName) {
+				ViewData.ValidateUserName = false
+				ViewData.UserNameErrorMsg = "Please enter a valid username."
+			}
+			if validator.IsEmpty(inputPassword) || !validator.IsValidPassword(inputPassword) {
+				ViewData.ValidatePassword = false
+			}
+			if validator.IsEmpty(inputMobile) || !validator.IsMobileNumber(inputMobile) {
+				ViewData.ValidateMobileNumber = false
+			}
 
+			// If all validations are true
+			if ViewData.ValidateFirstName && ViewData.ValidateLastName && ViewData.ValidateUserName && ViewData.ValidatePassword && ViewData.ValidateMobileNumber {
+				// check if username exist/ taken
+				userItf := (**userList).FindByUsername(inputUserName)
+				if userItf != nil {
+					ViewData.ValidateUserName = false
+					ViewData.UserNameErrorMsg = "Please enter a valid username."
+				}
+
+				if ViewData.ValidateUserName {
+					// create session
+					id := uuid.NewV4()
+					myCookie := &http.Cookie{
+						Name:  "myCookie",
+						Value: id.String(),
+					}
+					http.SetCookie(res, myCookie)
+					mapSessions[myCookie.Value] = inputUserName
+
+					bPassword, err := bcrypt.GenerateFromPassword([]byte(inputPassword), bcrypt.MinCost)
+					if err != nil {
+						logger.Info.Printf("signupHandler: %v", err)
+						http.Error(res, "Internal server error", http.StatusInternalServerError)
+						return
+					}
+
+					myUser.Username = inputUserName
+					myUser.Password = string(bPassword)
+					myUser.FirstName = inputFirstName
+					myUser.LastName = inputLastName
+					myUser.Role = enumPatient
+
+					mobileNum, _ := strconv.Atoi(inputMobile)
+					myUser.MobileNumber = mobileNum
+
+					// Add into linklist and JSON
+					err = (**userList).Add(&myUser)
+					if err != nil {
+						logger.Error.Println(err)
+					} else {
+						(**userList).InsertionSort()
+						user.AddUserDate(&myUser)
+					}
+
+					// redirect to patient landing page
+					http.Redirect(res, req, "/appointments", http.StatusSeeOther)
+					return
+				}
+			}
 		}
-		tpl.ExecuteTemplate(res, "signup.gohtml", ViewData)
+		err := tpl.ExecuteTemplate(res, "signup.gohtml", ViewData)
+		if err != nil {
+			logger.Info.Printf("signupHandler: %v", err)
+		}
 	}
 }
 
@@ -142,7 +187,7 @@ func loginHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.Error.Println(err)
+				logger.Panic.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
@@ -165,16 +210,28 @@ func loginHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 
 		// process form submission
 		if req.Method == http.MethodPost {
-			username := req.FormValue("username")
-			password := req.FormValue("password")
 
-			var userObj *user.User
+			var (
+				userItf interface{}
+				userObj *user.User
+			)
+
+			// Retrieve form input and remove empty spaces
+			inputUserName := strings.TrimSpace(req.FormValue("username"))
+			inputPassword := strings.TrimSpace(req.FormValue("password"))
+
+			//Validate Fields
+			if validator.IsEmpty(inputUserName) || !validator.IsValidUsername(inputUserName) {
+				ViewData.LoginFail = true
+			}
 
 			// check if user exist with username
-			userItf := (**userList).FindByUsername(username)
-			if userItf == nil {
-				ViewData.LoginFail = true
-				logger.Info.Println("Login fail. user:", username)
+			if !ViewData.LoginFail {
+				userItf = (**userList).FindByUsername(inputUserName)
+				if userItf == nil {
+					ViewData.LoginFail = true
+					logger.Info.Println("loginHandler: Login fail. user:", inputUserName)
+				}
 			}
 
 			// Check if user is deleted
@@ -182,33 +239,38 @@ func loginHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 				userObj = userItf.(*user.User)
 				if userObj.IsDeleted {
 					ViewData.LoginFail = true
-					logger.Info.Println("Login fail. user:", username)
+					logger.Info.Println("loginHandler: Login fail. user:", userObj.Username)
 				}
 			}
 
 			// Matching of password entered
 			if !ViewData.LoginFail {
-				err := bcrypt.CompareHashAndPassword([]byte(userObj.Password), []byte(password))
+				err := bcrypt.CompareHashAndPassword([]byte(userObj.Password), []byte(inputPassword))
 				if err != nil {
 					ViewData.LoginFail = true
-					logger.Info.Println("Login fail. user:", username)
+					logger.Info.Println("loginHandler: Login fail. user:", userObj.Username)
 				}
 			}
 
 			if !ViewData.LoginFail {
 				id := uuid.NewV4()
 				myCookie := &http.Cookie{
-					Name:  "myCookie",
-					Value: id.String(),
+					Name:    "myCookie",
+					Expires: time.Now().AddDate(0, 0, 1),
+					Value:   id.String(),
 				}
+				go killOtherSession(myCookie)
+				logger.Info.Printf("loginHandler: Login successful. user:%v", userObj.Username)
 				http.SetCookie(res, myCookie)
 				mapSessions[myCookie.Value] = userObj.Username
 				http.Redirect(res, req, "/appointments", http.StatusSeeOther)
 				return
 			}
-			logger.Info.Println("Login successful. user:", username)
 		}
-		tpl.ExecuteTemplate(res, "login.gohtml", ViewData)
+		err := tpl.ExecuteTemplate(res, "login.gohtml", ViewData)
+		if err != nil {
+			logger.Error.Printf("loginHandler: %v", err)
+		}
 	}
 }
 
@@ -219,16 +281,19 @@ func logoutHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			return
 		}
 		myCookie, _ := req.Cookie("myCookie")
+		// Get username
+		username, _ := mapSessions[myCookie.Value]
+		logger.Info.Println("logoutHandler: Logout... user:", username)
 		// delete the session
 		delete(mapSessions, myCookie.Value)
-		// remove the cookie
+		// Expire the cookie
 		myCookie = &http.Cookie{
-			Name:   "myCookie",
-			Value:  "",
-			MaxAge: -1,
+			Path:    "/",
+			Name:    "myCookie",
+			MaxAge:  -1,
+			Expires: time.Now().Add(-100 * time.Hour),
 		}
 		http.SetCookie(res, myCookie)
-
 		http.Redirect(res, req, "/", http.StatusSeeOther)
 	}
 }
@@ -237,8 +302,7 @@ func appointmentListHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
+				logger.Panic.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
@@ -265,9 +329,9 @@ func appointmentListHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 				viewReq = enumUpcoming
 			}
 			if viewReq == enumUpcoming {
-				appointments = (**appointmentTree).GetUpComingAppointments(myUser, "patient")
+				appointments = (**appointmentTree).GetUpComingAppointments(myUser, enumPatient)
 			} else {
-				appointments = (**appointmentTree).GetAllAppointments(myUser, "patient")
+				appointments = (**appointmentTree).GetAllAppointments(myUser, enumPatient)
 			}
 		}
 
@@ -352,7 +416,10 @@ func appointmentListHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 				ViewData.Appointments = app.GetDuplicate(result, filterCount)
 			}
 		}
-		tpl.ExecuteTemplate(res, "appointmentList.gohtml", ViewData)
+		err := tpl.ExecuteTemplate(res, "appointmentList.gohtml", ViewData)
+		if err != nil {
+			logger.Error.Println(err)
+		}
 	}
 }
 
@@ -360,8 +427,7 @@ func appointmentSearchHandler(userList, appointmentSessionList **dll.DoublyLinke
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
+				logger.Panic.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
@@ -414,12 +480,23 @@ func appointmentSearchHandler(userList, appointmentSessionList **dll.DoublyLinke
 				ViewData.SelectedDate = appointmentDate.Format("2006-01-02")
 			}
 		}
-		tpl.ExecuteTemplate(res, "appointmentSearch.gohtml", ViewData)
+		err := tpl.ExecuteTemplate(res, "appointmentSearch.gohtml", ViewData)
+		if err != nil {
+			logger.Error.Println(err)
+		}
 	}
 }
 
 func appointmentCreateHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.Panic.Println(err)
+				http.Redirect(res, req, "/", http.StatusInternalServerError)
+				return
+			}
+		}()
+
 		myUser, authFail, httpStatusNum := authenticationCheck(res, req, userList, false)
 		if authFail {
 			http.Redirect(res, req, "/", httpStatusNum)
@@ -439,7 +516,10 @@ func appointmentCreateHandler(userList **dll.DoublyLinkedList) http.HandlerFunc 
 			user.GetDentistList(users),
 		}
 
-		tpl.ExecuteTemplate(res, "appointmentCreate_step1.gohtml", ViewData)
+		err := tpl.ExecuteTemplate(res, "appointmentCreate_step1.gohtml", ViewData)
+		if err != nil {
+			logger.Error.Println(err)
+		}
 	}
 }
 
@@ -447,8 +527,7 @@ func appointmentCreatePart2Handler(userList, appointmentSessionList **dll.Doubly
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
+				logger.Panic.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
@@ -499,7 +578,10 @@ func appointmentCreatePart2Handler(userList, appointmentSessionList **dll.Doubly
 				ViewData.SelectedDate = appointmentDate.Format("2006-01-02")
 			}
 		}
-		tpl.ExecuteTemplate(res, "appointmentCreate_step2.gohtml", ViewData)
+		err := tpl.ExecuteTemplate(res, "appointmentCreate_step2.gohtml", ViewData)
+		if err != nil {
+			logger.Error.Println(err)
+		}
 	}
 }
 
@@ -507,8 +589,7 @@ func appointmentCreateConfirmHandler(userList, appointmentSessionList **dll.Doub
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
+				logger.Panic.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
@@ -572,7 +653,10 @@ func appointmentCreateConfirmHandler(userList, appointmentSessionList **dll.Doub
 			ViewData.FormSubmitted = true
 		}
 
-		tpl.ExecuteTemplate(res, "appointmentCreateConfirm.gohtml", ViewData)
+		err = tpl.ExecuteTemplate(res, "appointmentCreateConfirm.gohtml", ViewData)
+		if err != nil {
+			logger.Error.Println(err)
+		}
 	}
 }
 
@@ -580,8 +664,7 @@ func appointmentEditHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
+				logger.Panic.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
@@ -654,7 +737,10 @@ func appointmentEditHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 			}
 		}
 
-		tpl.ExecuteTemplate(res, "appointmentEdit.gohtml", ViewData)
+		err := tpl.ExecuteTemplate(res, "appointmentEdit.gohtml", ViewData)
+		if err != nil {
+			logger.Error.Println(err)
+		}
 	}
 }
 
@@ -662,8 +748,7 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
+				logger.Panic.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
@@ -744,12 +829,19 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 				(**appointmentTree).Add(id, dateReq, session, dentist, appointment.Patient)
 				appointmentData := app.NewAppointment(id, appointment.Patient.(*user.User).Username, dentist.Username, dateReq, session)
 				app.AddAppointmentData(appointmentData)
-				(**appointmentTree).Remove(appointment)
-				app.DeleteAppointmentData(oldAppointment.ID)
-				ViewData.Successful = true
+				err := (**appointmentTree).Remove(appointment)
+				if err != nil {
+					logger.Error.Println(err)
+				} else {
+					app.DeleteAppointmentData(oldAppointment.ID)
+					ViewData.Successful = true
+				}
 			}
 		}
-		tpl.ExecuteTemplate(res, "appointmentEditConfirm.gohtml", ViewData)
+		err := tpl.ExecuteTemplate(res, "appointmentEditConfirm.gohtml", ViewData)
+		if err != nil {
+			logger.Error.Println(err)
+		}
 	}
 }
 
@@ -757,8 +849,7 @@ func appointmentDeleteHandler(userList, appointmentSessionList **dll.DoublyLinke
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
+				logger.Panic.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
@@ -794,17 +885,31 @@ func appointmentDeleteHandler(userList, appointmentSessionList **dll.DoublyLinke
 
 		// Process form submission
 		if req.Method == http.MethodPost {
-			(**appointmentTree).Remove(appointment)
-			app.DeleteAppointmentData(appointment.ID)
-			ViewData.Successful = true
+			err := (**appointmentTree).Remove(appointment)
+			if err != nil {
+				logger.Error.Println(err)
+			} else {
+				app.DeleteAppointmentData(appointment.ID)
+				ViewData.Successful = true
+			}
 		}
 
-		tpl.ExecuteTemplate(res, "appointmentDelete.gohtml", ViewData)
+		err := tpl.ExecuteTemplate(res, "appointmentDelete.gohtml", ViewData)
+		if err != nil {
+			logger.Error.Println(err)
+		}
 	}
 }
 
 func userListHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.Panic.Println(err)
+				http.Redirect(res, req, "/", http.StatusInternalServerError)
+				return
+			}
+		}()
 
 		myUser, authFail, httpStatusNum := authenticationCheck(res, req, userList, true)
 		if authFail {
@@ -832,7 +937,10 @@ func userListHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			"",
 		}
 
-		tpl.ExecuteTemplate(res, "userList.gohtml", ViewData)
+		err := tpl.ExecuteTemplate(res, "userList.gohtml", ViewData)
+		if err != nil {
+			logger.Error.Println(err)
+		}
 	}
 }
 
@@ -841,8 +949,7 @@ func userEditHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 		defer func() {
 			if err := recover(); err != nil {
 				ede.CheckEncryption(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
+				logger.Panic.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
@@ -864,10 +971,7 @@ func userEditHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			}
 		}
 
-		ret := (**userList).FindByUsername(username)
-		selectedUser := ret.(*user.User)
-		copyUser := user.NewUser(selectedUser.Username, selectedUser.Password, selectedUser.Role, selectedUser.FirstName, selectedUser.LastName, selectedUser.MobileNumber)
-
+		var selectedUser *user.User
 		ViewData := struct {
 			LoggedInUser         *user.User
 			PageTitle            string
@@ -889,17 +993,34 @@ func userEditHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			true,
 			false,
 		}
-
 		if ViewData.LoggedInUser.Role == enumAdmin {
 			ViewData.CurrentPage = "MU"
 		}
 
+		ret := (**userList).FindByUsername(username)
+		if ret == nil {
+			err := tpl.ExecuteTemplate(res, "userEdit.gohtml", ViewData)
+			if err != nil {
+				logger.Error.Println(err)
+			}
+			return
+		}
+
+		selectedUser = ret.(*user.User)
+		ViewData.UserData = selectedUser
+		copyUser := user.NewUser(selectedUser.Username, selectedUser.Password, selectedUser.Role, selectedUser.FirstName, selectedUser.LastName, selectedUser.MobileNumber)
+
 		// process form submission
 		if req.Method == http.MethodPost {
 			var edited = false
+
+			inputFirstName := strings.TrimSpace(req.FormValue("firstName"))
+			inputLastName := strings.TrimSpace(req.FormValue("lastName"))
+			inputMobile := strings.TrimSpace(req.FormValue("mobileNum"))
+			inputPassword := strings.TrimSpace(req.FormValue("password"))
+
 			// Validate first name input
-			inputFirstName := req.FormValue("firstName")
-			if validator.IsEmpty(inputFirstName) || !validator.IsAlphabet(inputFirstName) {
+			if validator.IsEmpty(inputFirstName) || !validator.IsValidName(inputFirstName) {
 				ViewData.ValidateFirstName = false
 			}
 			if ViewData.ValidateFirstName {
@@ -909,8 +1030,7 @@ func userEditHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 				}
 			}
 			// Validate last name input
-			inputLastName := req.FormValue("lastName")
-			if validator.IsEmpty(inputLastName) || !validator.IsAlphabet(inputLastName) {
+			if validator.IsEmpty(inputLastName) || !validator.IsValidName(inputLastName) {
 				ViewData.ValidateLastName = false
 			}
 			if ViewData.ValidateLastName {
@@ -920,19 +1040,19 @@ func userEditHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 				}
 			}
 			// Validate mobile number input
-			inputMobile := req.FormValue("mobileNum")
-			if validator.IsEmpty(inputMobile) || !validator.IsMobileNumber(inputMobile) {
-				ViewData.ValidateMobileNumber = false
-			}
-			if ViewData.ValidateMobileNumber {
-				mobileNumber, _ := strconv.Atoi(inputMobile)
-				if mobileNumber != selectedUser.MobileNumber {
-					selectedUser.MobileNumber = mobileNumber
-					edited = true
+			if selectedUser.Role == enumPatient {
+				if validator.IsEmpty(inputMobile) || !validator.IsMobileNumber(inputMobile) {
+					ViewData.ValidateMobileNumber = false
+				}
+				if ViewData.ValidateMobileNumber {
+					mobileNumber, _ := strconv.Atoi(inputMobile)
+					if mobileNumber != selectedUser.MobileNumber {
+						selectedUser.MobileNumber = mobileNumber
+						edited = true
+					}
 				}
 			}
 			// Change Password
-			inputPassword := req.FormValue("password")
 			if len(inputPassword) > 0 {
 				// Matching of password entered
 				err := bcrypt.CompareHashAndPassword([]byte(selectedUser.Password), []byte(inputPassword))
@@ -974,7 +1094,7 @@ func userEditHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 
 		err := tpl.ExecuteTemplate(res, "userEdit.gohtml", ViewData)
 		if err != nil {
-			log.Fatalln(err)
+			logger.Error.Println(err)
 		}
 	}
 }
@@ -984,8 +1104,7 @@ func userDeleteHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 		defer func() {
 			if err := recover(); err != nil {
 				ede.CheckEncryption(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
-				var Error = log.New(os.Stdout, "\u001b[31mERROR: \u001b[0m", log.LstdFlags|log.Lshortfile)
-				Error.Println(err)
+				logger.Panic.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
@@ -1028,16 +1147,28 @@ func userDeleteHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			// Soft delete user
 			retUser.IsDeleted = true
 			ViewData.Successful = true
+			// Delete user for Linked-list
 			user.DeleteUserData(retUser)
+			// Remove user for sesscion if active
 		}
 		ViewData.Users = (**userList).GetList()
 
-		tpl.ExecuteTemplate(res, "userList.gohtml", ViewData)
+		err := tpl.ExecuteTemplate(res, "userList.gohtml", ViewData)
+		if err != nil {
+			logger.Error.Println(err)
+		}
 	}
 }
 
 func sessionListHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.Panic.Println(err)
+				http.Redirect(res, req, "/", http.StatusInternalServerError)
+				return
+			}
+		}()
 
 		myUser, authFail, httpStatusNum := authenticationCheck(res, req, userList, true)
 		if authFail {
@@ -1072,7 +1203,10 @@ func sessionListHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 
 		// Process form submission
 		if req.Method == http.MethodPost {
-			req.ParseForm()
+			err := req.ParseForm()
+			if err != nil {
+				logger.Error.Println(err)
+			}
 			for key, values := range req.Form {
 				for _, value := range values {
 					if key == "sessionsDel" {
@@ -1085,7 +1219,7 @@ func sessionListHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 
 		err := tpl.ExecuteTemplate(res, "sessions.gohtml", ViewData)
 		if err != nil {
-			log.Fatalln(err)
+			logger.Error.Println(err)
 		}
 	}
 }
