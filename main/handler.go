@@ -491,7 +491,7 @@ func appointmentCreateHandler(userList **dll.DoublyLinkedList) http.HandlerFunc 
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.Panic.Println(err)
+				logger.Error.Println(err)
 				http.Redirect(res, req, "/", http.StatusInternalServerError)
 				return
 			}
