@@ -78,3 +78,11 @@ func killOtherSession(newCookie *http.Cookie) {
 		}
 	}
 }
+
+func deleteSessionByUsername(username string) {
+	for k, v := range mapSessions {
+		if v == username {
+			delete(mapSessions, k)
+		}
+	}
+}

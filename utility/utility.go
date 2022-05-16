@@ -1,13 +1,14 @@
 package utility
 
 import (
-	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -17,6 +18,14 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
+
+func CurrFuncName() string {
+	pc := make([]uintptr, 15)
+	n := runtime.Callers(2, pc)
+	frames := runtime.CallersFrames(pc[:n])
+	frame, _ := frames.Next()
+	return frame.Function
+}
 
 func GetEnvVar(v string) string {
 	err := godotenv.Load()
@@ -48,9 +57,8 @@ func VerifyCheckSum() {
 				logger.Warning.Println("File Tampering detected.")
 			}
 		}
-		//env := GetEnvVar("CHECKSUM_TIMER")
-		//timer, _ := strconv.Atoi(env)
-		time.Sleep(10 * time.Minute)
+		min, _ := time.ParseDuration(GetEnvVar("CHECKSUM_TIMER"))
+		time.Sleep(min)
 	}
 }
 
@@ -66,7 +74,7 @@ func computeSHA256(file string) (string, error) {
 		}
 	}(f)
 
-	harsher := sha256.New()
+	harsher := sha512.New()
 	if _, err := io.Copy(harsher, f); err != nil {
 		return "", err
 	}

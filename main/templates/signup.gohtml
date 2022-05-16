@@ -4,30 +4,25 @@
     <h1>Create New Account</h1>
     <h3>Enter the following to create a new account</h3>
     <form method="post" class="row g-3">
-        <div class="col-md-6">
-            <label class="form-label" for ="firstname">First name:</label>
-            <input class="form-control {{if not .ValidateFirstName}}is-invalid{{end}}" type="text" name="firstname" placeholder="First Name">
-            <div class="invalid-feedback">
-                Please enter a valid first name (English only).
-            </div>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label" for ="lastname">Last name:</label>
-            <input class="form-control {{if not .ValidateLastName}}is-invalid{{end}}" type="text" name="lastname" placeholder="Last Name">
-            <div class="invalid-feedback">
-                Please enter a valid last name (English only).
-            </div>
-        </div>
         <div class="col-12">
             <label class="form-label" for ="username">Username:</label>
-            <input class="form-control {{if not .ValidateUserName}}is-invalid{{end}}" type="text" name="username" placeholder="Username">
+            <input class="form-control {{if not .ValidateUserName}}is-invalid{{end}}" type="text" id="username" name="username" placeholder="Username" value="{{.InputUserName}}">
             <div class="invalid-feedback">
-                {{.UserNameErrorMsg}}
+                {{if .UserNameTaken}}
+                    Sorry, this username isn't available.
+                {{else}}
+                    Your username should be:
+                    <ul>
+                        <li>Between 5 and 20 characters</li>
+                        <li>Begin and end with a letter or number</li>
+                        <li>Contain only letters, numbers, '.', '_' or '-'.</li>
+                    </ul>
+                {{end}}
             </div>
         </div>
         <div class="col-12">
             <label class="form-label" for ="password">Password:</label>
-            <input class="form-control {{if not .ValidatePassword}}is-invalid{{end}}" type="password" name="password" placeholder="Password" autocomplete="off">
+            <input class="form-control {{if not .ValidatePassword}}is-invalid{{end}}" type="password" id="password" name="password" placeholder="Password" autocomplete="off" value="{{.InputPassword}}">
             <div class="invalid-feedback">
                 Your password is not strong enough. New passwords must:
                 <ul>
@@ -37,9 +32,23 @@
                 </ul>
             </div>
         </div>
+        <div class="col-md-6">
+            <label class="form-label" for ="firstname">First name:</label>
+            <input class="form-control {{if not .ValidateFirstName}}is-invalid{{end}}" type="text" id="firstname" name="firstname" placeholder="First Name" value="{{.InputFirstName}}">
+            <div class="invalid-feedback">
+                Please enter a valid first name (English only).
+            </div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for ="lastname">Last name:</label>
+            <input class="form-control {{if not .ValidateLastName}}is-invalid{{end}}" type="text" id="lastname" name="lastname" placeholder="Last Name" value="{{.InputLastName}}">
+            <div class="invalid-feedback">
+                Please enter a valid last name (English only).
+            </div>
+        </div>
         <div class="col-12">
             <label class="form-label" for ="mobileNum">Mobile Number:</label>
-            <input class="form-control {{if not .ValidateMobileNumber}}is-invalid{{end}}" type="number" name="mobileNum" placeholder="Mobile Number">
+            <input class="form-control {{if not .ValidateMobileNumber}}is-invalid{{end}}" type="number" id="mobileNum" name="mobileNum" placeholder="Mobile Number" value="{{.InputMobileNumber}}">
             <div class="invalid-feedback">
                 Please enter a valid mobile number.
             </div>

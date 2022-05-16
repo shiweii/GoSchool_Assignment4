@@ -64,6 +64,10 @@
             <a href="/appointment/create/{{$dentist.Username}}/{{$date}}/{{$val.Num}}" class="list-group-item list-group-item-action {{if not $val.Available}}disabled{{end}}">{{$date | formatDate}} ({{$date | getDay}}) | Session {{$val.Num}} | {{$val.StartTime}} - {{$val.EndTime}} {{if not $val.Available}}(Not Available){{end}}</a>
         {{end}}
       {{end}}
+    {{else}}
+        {{if .FormProcessed}}
+            <div class="alert alert-danger" role="alert">No Result Found.</div>
+        {{end}}
     {{end}}
 </div>
 

@@ -9,42 +9,45 @@
 
 <h2>Confirm Appointment Detail</h2>
 <br/>
-{{ if .Successful }}
-    <div class="alert alert-success" role="alert">Appointment changed successfully</div>
-{{end}}
-<h3><u>Existing Appointment</u></h3>
-{{if eq .LoggedInUser.Role "admin"}}
-<div>Patient: <b>{{.Appointment.Patient.FirstName}} {{.Appointment.Patient.LastName}}</b></div>
-{{end}}
-<div>Dentist: <b>Dr. {{.OldDentist.FirstName}} {{.OldDentist.LastName}}</b></div>
-<div>Date: <b>{{.OldDate | formatDate}} ({{.OldDate | getDay}})</b></div>
-{{$appOldSession := .OldSession}}
-{{range .Sessions}}
-    {{if eq .Num $appOldSession}}
-            <div>Time: <b>{{.StartTime}} - {{.EndTime}}</b></div>
+{{if .IsInputError}}
+    <div class="alert alert-danger" role="alert">There's an error editing the appointment, <a href="/appointments">click here</a> to try again.</div>
+{{else}}
+    {{ if .Successful }}
+        <div class="alert alert-success" role="alert">Appointment changed successfully</div>
     {{end}}
-{{end}}
-<hr/>
-<h3><u>Updated Appointment</u></h3>
-{{if eq .LoggedInUser.Role "admin"}}
-<div>Patient: <b>{{.Appointment.Patient.FirstName}} {{.Appointment.Patient.LastName}}</b></div>
-{{end}}
-<div>Dentist: <b>Dr. {{.Dentist.FirstName}} {{.Dentist.LastName}}</b></div>
-<div>Date: <b>{{.Date | formatDate}} ({{.Date | getDay}})</b></div>
-{{$appSession := .Session}}
-{{range .Sessions}}
-    {{if eq .Num $appSession}}
-            <div>Time: <b>{{.StartTime}} - {{.EndTime}}</b></div>
+    <h3><u>Existing Appointment</u></h3>
+    {{if eq .LoggedInUser.Role "admin"}}
+    <div>Patient: <b>{{.CurrentAppointment.Patient.FirstName}} {{.CurrentAppointment.Patient.LastName}}</b></div>
     {{end}}
+    <div>Dentist: <b>Dr. {{.OldDentist.FirstName}} {{.OldDentist.LastName}}</b></div>
+    <div>Date: <b>{{.OldDate | formatDate}} ({{.OldDate | getDay}})</b></div>
+    {{$appCurrentSession := .OldSession}}
+    {{range .SessionList}}
+        {{if eq .Num $appCurrentSession}}
+                <div>Time: <b>{{.StartTime}} - {{.EndTime}}</b></div>
+        {{end}}
+    {{end}}
+    <hr/>
+    <h3><u>Updated Appointment</u></h3>
+    {{if eq .LoggedInUser.Role "admin"}}
+    <div>Patient: <b>{{.CurrentAppointment.Patient.FirstName}} {{.CurrentAppointment.Patient.LastName}}</b></div>
+    {{end}}
+    <div>Dentist: <b>Dr. {{.EditedDentist.FirstName}} {{.EditedDentist.LastName}}</b></div>
+    <div>Date: <b>{{.EditedDate | formatDate}} ({{.EditedDate | getDay}})</b></div>
+    {{$appSession := .EditedSession}}
+    {{range .SessionList}}
+        {{if eq .Num $appSession}}
+                <div>Time: <b>{{.StartTime}} - {{.EndTime}}</b></div>
+        {{end}}
+    {{end}}
+    <br/>
+    <form method="post">
+        {{if not .Successful}}
+        <a class="btn btn-primary" href="/appointment/edit/{{.CurrentAppointment.ID}}" role="button">Back</a>&nbsp;&nbsp;<button type="submit" class="btn btn-primary">Confirm</button>
+        {{end}}
+        {{if .Successful}}
+            <a class="btn btn-primary" href="/appointments" role="button">Back to appointment listing</a>
+        {{end}}
+    </form>
 {{end}}
-<br/>
-<form method="post">
-    {{if not .Successful}}
-    <a class="btn btn-primary" href="/appointment/edit/{{.Appointment.ID}}" role="button">Back</a>&nbsp;&nbsp;<button type="submit" class="btn btn-primary">Confirm</button>
-    {{end}}
-    {{if .Successful}}
-        <a class="btn btn-primary" href="/appointments" role="button">Back to appointment listing</a>
-    {{end}}
-</form>
-
 {{template "footer"}}

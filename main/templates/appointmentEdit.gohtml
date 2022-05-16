@@ -9,51 +9,55 @@
 
 <h2>Change Appointment</h2>
 <br/>
-<div><b><u>Appointment Details</u></b></div>
-{{if eq .LoggedInUser.Role "admin"}}
-<div>Patient: <b>{{.Appointment.Patient.FirstName}} {{.Appointment.Patient.LastName}}</b></div>
-{{end}}
-<div>Dentist: <b>Dr. {{.Appointment.Dentist.FirstName}} {{.Appointment.Dentist.LastName}}</b></div>
-<div>Date: <b>{{.Appointment.Date | formatDate}} ({{.Appointment.Date | getDay}})</b></div>
-{{$appSession := .Appointment.Session}}
-{{range .Sessions}}
-    {{if eq .Num $appSession}}
-            <div>Time: <b>{{.StartTime}} - {{.EndTime}}</b></div>
+{{if .IsInputError}}
+    <div class="alert alert-danger" role="alert">Appointment does not exist, <a href="/appointments">click here</a> to select another appointment.</div>
+{{else}}
+    <div><b><u>Appointment Details</u></b></div>
+    {{if eq .LoggedInUser.Role "admin"}}
+    <div>Patient: <b>{{.Appointment.Patient.FirstName}} {{.Appointment.Patient.LastName}}</b></div>
     {{end}}
-{{end}}
-<hr/>
-{{$dentist := .Appointment.Dentist.Username}}
-{{$selDentist := .SelectedDentist}}
-<div class="container bg-light border p-4">
-    <div class="row">
-        <div class="col">
-            <form class="row g-3" method="post">
-                <div class="col-md-6">
-                    <label class="form-label" for="appDentist">Select Dentist:</label>
-                    <select class="form-select" name="appDentist" id="appDentist">
-                        {{range $key, $val := .Dentists}}
-                            <option value="{{$val.Username}}" {{if eq $selDentist $val.Username}}selected{{end}}>Dr. {{$val.FirstName}} {{$val.LastName}}</option>
-                        {{end}}
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="appDate">Select date to view dentist's availability:</label>
-                    <input type="date" class="form-control" id="appDate" name="appDate" value="{{.Appointment.Date}}" min="{{.TodayDate}}">
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Search</button>
-                </div>
-            </form>
+    <div>Dentist: <b>Dr. {{.Appointment.Dentist.FirstName}} {{.Appointment.Dentist.LastName}}</b></div>
+    <div>Date: <b>{{.Appointment.Date | formatDate}} ({{.Appointment.Date | getDay}})</b></div>
+    {{$appSession := .Appointment.Session}}
+    {{range .Sessions}}
+        {{if eq .Num $appSession}}
+                <div>Time: <b>{{.StartTime}} - {{.EndTime}}</b></div>
+        {{end}}
+    {{end}}
+    <hr/>
+    {{$dentist := .Appointment.Dentist.Username}}
+    {{$selDentist := .SelectedDentist}}
+    <div class="container bg-light border p-4">
+        <div class="row">
+            <div class="col">
+                <form class="row g-3" method="post">
+                    <div class="col-md-6">
+                        <label class="form-label" for="appDentist">Select Dentist:</label>
+                        <select class="form-select" name="appDentist" id="appDentist">
+                            {{range $key, $val := .Dentists}}
+                                <option value="{{$val.Username}}" {{if eq $selDentist $val.Username}}selected{{end}}>Dr. {{$val.FirstName}} {{$val.LastName}}</option>
+                            {{end}}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="appDate">Select date to view dentist's availability:</label>
+                        <input type="date" class="form-control" id="appDate" name="appDate" value="{{.Appointment.Date}}" min="{{.TodayDate}}">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
-<br/><br/>
-<div class="list-group">
-    {{$appointment := .Appointment}}
-    {{$date := .SelectedDate}}
-    {{range $key, $val := .DentistsSession}}
-        <a href="/appointment/edit/{{$appointment.ID}}/{{$selDentist}}/{{$date}}/{{$val.Num}}" class="list-group-item list-group-item-action {{if not $val.Available}}disabled{{end}}">{{$date | formatDate}} ({{$date | getDay}}) | Session {{$val.Num}} | {{$val.StartTime}} - {{$val.EndTime}} {{if not $val.Available}}(Not Available){{end}}</a>
-    {{end}}
-</div>
+    <br/><br/>
+    <div class="list-group">
+        {{$appointment := .Appointment}}
+        {{$date := .SelectedDate}}
+        {{range $key, $val := .DentistsSession}}
+            <a href="/appointment/edit/{{$appointment.ID}}/{{$selDentist}}/{{$date}}/{{$val.Num}}" class="list-group-item list-group-item-action {{if not $val.Available}}disabled{{end}}">{{$date | formatDate}} ({{$date | getDay}}) | Session {{$val.Num}} | {{$val.StartTime}} - {{$val.EndTime}} {{if not $val.Available}}(Not Available){{end}}</a>
+        {{end}}
+    </div>
+{{end}}
 
 {{template "footer"}}

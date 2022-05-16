@@ -6,9 +6,12 @@ import (
 )
 
 const (
-	name      = "^[a-zA-Z_. ]*$"
-	username  = "^[a-zA-Z0-9][a-zA-Z0-9\\_\\-\\.]*[a-zA-Z0-9]$"
-	mobileNum = "^[8-9][0-9]{7}$"
+	name              = "^[a-zA-Z_. ]*$"
+	username          = "^[a-zA-Z0-9][a-zA-Z0-9\\_\\-\\.]*[a-zA-Z0-9]$"
+	mobileNum         = "^[8-9][0-9]{7}$"
+	usernameMinLength = 5
+	usernameMaxLength = 20
+	PasswordMinLength = 7
 )
 
 func IsEmpty(input string) bool {
@@ -21,10 +24,14 @@ func IsValidName(input string) bool {
 }
 
 // IsValidUsername
+// Username consists max 20 characters
 // Username consists of alphanumeric characters (a-zA-Z0-9), lowercase, or uppercase.
 // Username allowed of the dot (.), underscore (_), and hyphen (-).
 // The dot (.), underscore (_), or hyphen (-) must not be the first or last character.
 func IsValidUsername(input string) bool {
+	if len(input) < usernameMinLength || len(input) > usernameMaxLength {
+		return false
+	}
 	regex := regexp.MustCompile(username)
 	return regex.MatchString(input)
 }
@@ -41,7 +48,7 @@ func IsValidPassword(input string) bool {
 		hasNumber  = false
 		hasSpecial = false
 	)
-	if len(input) >= 7 {
+	if len(input) >= PasswordMinLength {
 		hasMinLen = true
 	}
 	for _, char := range input {
