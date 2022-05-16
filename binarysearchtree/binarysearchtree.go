@@ -1,12 +1,14 @@
-// Package binarysearchtree contains function that store data in binarysearchtree
+// Package binarysearchtree implements a binary search tree.
 package binarysearchtree
 
 import (
 	"errors"
-	"fmt"
 	"time"
+
+	"github.com/shiweii/logger"
 )
 
+// BinaryNode is an element within the binary search tree.
 type BinaryNode struct {
 	ID      int
 	Dentist interface{}
@@ -17,43 +19,49 @@ type BinaryNode struct {
 	right   *BinaryNode
 }
 
+// BinarySearchTree  holds elements of the binary search tree.
 type BinarySearchTree struct {
 	root *BinaryNode
 }
 
+// New will return a newly created instance of a binary search tree.
 func New() *BinarySearchTree {
 	bst := &BinarySearchTree{nil}
 	return bst
 }
 
+// Add wrapper function to added new element into the binary search tree.
 func (bst *BinarySearchTree) Add(id int, date string, session int, dentist interface{}, patient interface{}) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("panic, recovered value: %v\n", r)
+			logger.Panic.Printf("panic, recovered value: %v\n", r)
 		}
 	}()
 	bst.insertNode(&bst.root, date, session, dentist, patient, id)
 }
 
+// insertNode inserts a new binary node into the binary search tree.
 func (bst *BinarySearchTree) insertNode(t **BinaryNode, date string, session int, dentist interface{}, patient interface{}, id int) {
 	if (*t) == nil {
 		newNode := &BinaryNode{id, dentist, patient, date, session, nil, nil}
 		*t = newNode
 	} else {
 		if date < (*t).Date {
-			bst.insertNode(&(*t).left, date, session, dentist, patient, id) // dereferencing
+			bst.insertNode(&(*t).left, date, session, dentist, patient, id) // de-referencing
 		} else {
-			bst.insertNode(&(*t).right, date, session, dentist, patient, id) // dereferencing
+			bst.insertNode(&(*t).right, date, session, dentist, patient, id) // de-referencing
 		}
 	}
 }
 
+// GetAppointmentByID returns binary node based on id field
 func (bst *BinarySearchTree) GetAppointmentByID(id int) *BinaryNode {
 	var result *BinaryNode
 	SearchAppointmentByID(bst.root, id, &result)
 	return result
 }
 
+// SearchAppointmentByID performs InOrder Traversal to search for an element based on application ID
 func SearchAppointmentByID(t *BinaryNode, id int, result **BinaryNode) {
 	if t != nil {
 		SearchAppointmentByID(t.left, id, result)
@@ -64,6 +72,7 @@ func SearchAppointmentByID(t *BinaryNode, id int, result **BinaryNode) {
 	}
 }
 
+// findSuccessor find and return binary nodes next smaller value
 func (bst *BinarySearchTree) findSuccessor(t *BinaryNode) *BinaryNode {
 	for t.right != nil { // Find node on extreme right
 		t = t.right
@@ -71,6 +80,10 @@ func (bst *BinarySearchTree) findSuccessor(t *BinaryNode) *BinaryNode {
 	return t
 }
 
+// removeNode removes a node from the binary search tree base on the follow cases
+// Case 1, node to be deleted has 0 child (is a leaf)
+// Case 2, node to be deleted has 1 child
+// Case 3, node to be deleted has 2 children
 func (bst *BinarySearchTree) removeNode(t **BinaryNode, removeNode *BinaryNode) (*BinaryNode, error) {
 	if *t == nil {
 		return nil, errors.New("error: tree is empty")
@@ -92,15 +105,23 @@ func (bst *BinarySearchTree) removeNode(t **BinaryNode, removeNode *BinaryNode) 
 	return *t, nil
 }
 
+// Remove wrapper function to remove application from the binary search tree.
 func (bst *BinarySearchTree) Remove(removeNode *BinaryNode) error {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Panic.Printf("panic, recovered value: %v\n", r)
+		}
+	}()
 	bst.root, _ = bst.removeNode(&bst.root, removeNode)
 	return nil
 }
 
+// GetSize returns the number of nodes stored in the binary search tree.
 func (bst *BinarySearchTree) GetSize() int {
 	return size(bst.root)
 }
 
+// size performs recursive call to get the total number of nodes in the binary search tree.
 func size(node *BinaryNode) int {
 	if node == nil {
 		return 0
@@ -109,11 +130,13 @@ func size(node *BinaryNode) int {
 	}
 }
 
+// Contains searches all elements in the binary search tree for any matches.
 func (bst *BinarySearchTree) Contains(date string, session int, dentist interface{}, patient interface{}) bool {
 	newNode := BinaryNode{0, dentist, patient, date, session, nil, nil}
 	return containsTraversal(bst.root, newNode)
 }
 
+// containsTraversal performs InOrder Traversal to match any elements stored in the binary search tree.
 func containsTraversal(t *BinaryNode, n BinaryNode) bool {
 	if t != nil {
 		containsTraversal(t.left, n)
@@ -125,12 +148,19 @@ func containsTraversal(t *BinaryNode, n BinaryNode) bool {
 	return false
 }
 
+// GetAppointmentByDate returns a list of elements based on date field.
 func (bst *BinarySearchTree) GetAppointmentByDate(date, role string, searchInterface interface{}) []*BinaryNode {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Panic.Printf("panic, recovered value: %v\n", r)
+		}
+	}()
 	var list []*BinaryNode
 	bst.searchAppointmentByDate(bst.root, date, role, searchInterface, &list)
 	return list
 }
 
+// searchAppointmentByDate performs a binary search on the binary search tree.
 func (bst *BinarySearchTree) searchAppointmentByDate(t *BinaryNode, date, role string, searchInterface interface{}, list *[]*BinaryNode) []*BinaryNode {
 	if t == nil {
 		return nil
@@ -171,6 +201,7 @@ func (bst *BinarySearchTree) searchAppointmentByDate(t *BinaryNode, date, role s
 	}
 }
 
+// GetAllAppointments returns all elements based on user role.
 func (bst *BinarySearchTree) GetAllAppointments(searchInterface interface{}, role string) []*BinaryNode {
 	var list []*BinaryNode
 	oldDate := time.Now().AddDate(-100, 0, 0)
@@ -178,6 +209,8 @@ func (bst *BinarySearchTree) GetAllAppointments(searchInterface interface{}, rol
 	return list
 }
 
+// GetUpComingAppointments returns all elements based on user role.
+// Only return all elements which date are grater than time.Now()
 func (bst *BinarySearchTree) GetUpComingAppointments(searchInterface interface{}, role string) []*BinaryNode {
 	var list []*BinaryNode
 	currentTime := time.Now()
@@ -185,6 +218,7 @@ func (bst *BinarySearchTree) GetUpComingAppointments(searchInterface interface{}
 	return list
 }
 
+// containsTraversal performs InOrder Traversal to illiterate through the binary search tree.
 func (bst *BinarySearchTree) searchAppointments(t *BinaryNode, date string, searchInterface interface{}, role string, list *[]*BinaryNode) []*BinaryNode {
 	if t != nil {
 		bst.searchAppointments(t.left, date, searchInterface, role, list)
@@ -206,12 +240,14 @@ func (bst *BinarySearchTree) searchAppointments(t *BinaryNode, date string, sear
 	return *list
 }
 
+// SearchAllByField returns all elements based on selected field.
 func (bst *BinarySearchTree) SearchAllByField(field string, value interface{}, channel chan []*BinaryNode) {
 	var list []*BinaryNode
 	bst.searchInOrderTraversal(bst.root, field, value, &list)
 	channel <- list
 }
 
+// SearchAllByField performs and return elements using InOrder Traversal to illiterate through the binary search tree.
 func (bst *BinarySearchTree) searchInOrderTraversal(t *BinaryNode, field string, value interface{}, list *[]*BinaryNode) []*BinaryNode {
 	if t != nil {
 		bst.searchInOrderTraversal(t.left, field, value, list)

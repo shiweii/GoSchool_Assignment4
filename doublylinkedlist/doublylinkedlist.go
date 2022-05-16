@@ -1,3 +1,4 @@
+// Package doublylinkedlist implements a doubly linked list.
 package doublylinkedlist
 
 import (
@@ -6,29 +7,32 @@ import (
 	"reflect"
 )
 
+// node is an element of a linked list.
 type node struct {
 	value    interface{}
 	previous *node
 	next     *node
 }
 
+// DoublyLinkedList represents a doubly linked list.
 type DoublyLinkedList struct {
 	head *node
 	tail *node
 	size int
 }
 
-// New will return a newly created instance of a doubly linked list
+// New will return a newly created instance of a doubly linked list.
 func New() *DoublyLinkedList {
 	list := &DoublyLinkedList{nil, nil, 0}
 	return list
 }
 
-// GetSize Get Size of linked list
+// GetSize return Size of linked list.
 func (list *DoublyLinkedList) GetSize() int {
 	return list.size
 }
 
+// Add appends an interface to the end of the linked list.
 func (list *DoublyLinkedList) Add(elm interface{}) error {
 	newNode := &node{
 		value:    elm,
@@ -51,6 +55,7 @@ func (list *DoublyLinkedList) Add(elm interface{}) error {
 	return nil
 }
 
+// Remove Wrapper function to remove element from the linked list.
 func (list *DoublyLinkedList) Remove(elm interface{}) (interface{}, error) {
 	var index = 1
 	currentNode := list.head
@@ -65,6 +70,7 @@ func (list *DoublyLinkedList) Remove(elm interface{}) (interface{}, error) {
 	return nil, nil
 }
 
+// RemoveNode removes the element at the given index from the linked list.
 func (list *DoublyLinkedList) RemoveNode(index int) (interface{}, error) {
 	if list.head == nil {
 		return "", errors.New("empty linked list")
@@ -100,6 +106,7 @@ func (list *DoublyLinkedList) RemoveNode(index int) (interface{}, error) {
 	return item, nil
 }
 
+// GetList returns all elements in the linked list.
 func (list *DoublyLinkedList) GetList() []interface{} {
 	var values []interface{}
 	currentNode := list.head
@@ -114,6 +121,7 @@ func (list *DoublyLinkedList) GetList() []interface{} {
 	return values
 }
 
+// Get returns the element at index.
 func (list *DoublyLinkedList) Get(index int) interface{} {
 	var value interface{}
 	currentNode := list.head
@@ -131,18 +139,21 @@ func (list *DoublyLinkedList) Get(index int) interface{} {
 	return value
 }
 
+// Clear removes all elements from the list.
 func (list *DoublyLinkedList) Clear() {
 	list.head = nil
 	list.tail = nil
 	list.size = 0
 }
 
+// getFieldValue return the value of a field of a given element.
 func getFieldValue(itf interface{}, field string) interface{} {
 	rfl := reflect.ValueOf(itf).Elem()
 	value := rfl.FieldByName(field).Interface()
 	return value
 }
 
+// FindByUsername iterates and return element from sorted linked link by username.
 func (list *DoublyLinkedList) FindByUsername(username string) interface{} {
 	if len(username) > 0 {
 		return list.recursiveBinarySearchByUsername(list.head, list.tail, username, list.size)
@@ -150,6 +161,7 @@ func (list *DoublyLinkedList) FindByUsername(username string) interface{} {
 	return nil
 }
 
+// recursiveBinarySearchByUsername performs recursive binary search on sorted linked list.
 func (list *DoublyLinkedList) recursiveBinarySearchByUsername(firstNode *node, lastNode *node, value string, size int) interface{} {
 	if firstNode == nil || lastNode == nil {
 		return nil
@@ -174,6 +186,7 @@ func (list *DoublyLinkedList) recursiveBinarySearchByUsername(firstNode *node, l
 	}
 }
 
+// middleNode return the middle element within a given range of elements.
 func middleNode(start *node, mid int) *node {
 	if start == nil {
 		return nil
@@ -184,6 +197,7 @@ func middleNode(start *node, mid int) *node {
 	return start
 }
 
+// PrintAllNodes prints all elements in the linked list to terminal.
 func (list *DoublyLinkedList) PrintAllNodes() error {
 	currentNode := list.head
 	if currentNode == nil {
@@ -198,7 +212,7 @@ func (list *DoublyLinkedList) PrintAllNodes() error {
 	return nil
 }
 
-// Swap value of given node
+// swapData Swaps value between two nodes
 func (list *DoublyLinkedList) swapData(first, second *node) {
 	value := first.value
 	first.value = second.value
@@ -229,12 +243,14 @@ func (list *DoublyLinkedList) InsertionSort() {
 	}
 }
 
+// SearchByMobileNumber iterates and return element from sorted linked link by mobile number.
 func (list *DoublyLinkedList) SearchByMobileNumber(mobileNum int) interface{} {
 	//var ret interface{}
 	ret := list.recursiveSeqSearchByMobileNumber(list.head, mobileNum)
 	return ret
 }
 
+// recursiveSeqSearchByMobileNumber performs recursive sequential search on linked list.
 func (list *DoublyLinkedList) recursiveSeqSearchByMobileNumber(node *node, value int) interface{} {
 	if node == nil {
 		return nil
