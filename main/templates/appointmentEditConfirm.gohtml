@@ -15,6 +15,15 @@
     {{ if .Successful }}
         <div class="alert alert-success" role="alert">Appointment changed successfully</div>
     {{end}}
+    {{if .Unsuccessful}}
+        <div class="alert alert-danger" role="alert">
+            {{if .UnsuccessfulMsg}}
+                {{.UnsuccessfulMsg}}
+            {{else}}
+                The appointment slot have been booked by another user. <a href="/appointment/edit/{{.CurrentAppointment.ID}}">Click here</a> to select another slot.
+            {{end}}
+        </div>
+    {{end}}
     <h3><u>Existing Appointment</u></h3>
     {{if eq .LoggedInUser.Role "admin"}}
     <div>Patient: <b>{{.CurrentAppointment.Patient.FirstName}} {{.CurrentAppointment.Patient.LastName}}</b></div>
@@ -43,7 +52,9 @@
     <br/>
     <form method="post">
         {{if not .Successful}}
-        <a class="btn btn-primary" href="/appointment/edit/{{.CurrentAppointment.ID}}" role="button">Back</a>&nbsp;&nbsp;<button type="submit" class="btn btn-primary">Confirm</button>
+            {{if not .Unsuccessful}}
+                <a class="btn btn-primary" href="/appointment/edit/{{.CurrentAppointment.ID}}" role="button">Back</a>&nbsp;&nbsp;<button type="submit" class="btn btn-primary">Confirm</button>
+            {{end}}
         {{end}}
         {{if .Successful}}
             <a class="btn btn-primary" href="/appointments" role="button">Back to appointment listing</a>

@@ -7,17 +7,17 @@ import (
 	"reflect"
 )
 
-// node is an element of a linked list.
-type node struct {
-	value    interface{}
-	previous *node
-	next     *node
+// Node is an element of a linked list.
+type Node struct {
+	Value    interface{}
+	Previous *Node
+	Next     *Node
 }
 
 // DoublyLinkedList represents a doubly linked list.
 type DoublyLinkedList struct {
-	head *node
-	tail *node
+	head *Node
+	tail *Node
 	size int
 }
 
@@ -27,6 +27,16 @@ func New() *DoublyLinkedList {
 	return list
 }
 
+// GetHeadNode returns the head node of doubly linked list.
+func (list *DoublyLinkedList) GetHeadNode() *Node {
+	return list.head
+}
+
+// GetTailNode returns the tail node of doubly linked list.
+func (list *DoublyLinkedList) GetTailNode() *Node {
+	return list.tail
+}
+
 // GetSize return Size of linked list.
 func (list *DoublyLinkedList) GetSize() int {
 	return list.size
@@ -34,21 +44,21 @@ func (list *DoublyLinkedList) GetSize() int {
 
 // Add appends an interface to the end of the linked list.
 func (list *DoublyLinkedList) Add(elm interface{}) error {
-	newNode := &node{
-		value:    elm,
-		previous: nil,
-		next:     nil,
+	newNode := &Node{
+		Value:    elm,
+		Previous: nil,
+		Next:     nil,
 	}
 	if list.head == nil {
 		list.head = newNode
 		list.tail = newNode
 	} else {
 		currentNode := list.head
-		for currentNode.next != nil {
-			currentNode = currentNode.next
+		for currentNode.Next != nil {
+			currentNode = currentNode.Next
 		}
-		currentNode.next = newNode
-		newNode.previous = currentNode
+		currentNode.Next = newNode
+		newNode.Previous = currentNode
 		list.tail = newNode
 	}
 	list.size++
@@ -61,10 +71,10 @@ func (list *DoublyLinkedList) Remove(elm interface{}) (interface{}, error) {
 	currentNode := list.head
 
 	for currentNode != nil {
-		if reflect.DeepEqual(currentNode.value, elm) {
+		if reflect.DeepEqual(currentNode.Value, elm) {
 			return list.RemoveNode(index)
 		}
-		currentNode = currentNode.next
+		currentNode = currentNode.Next
 		index++
 	}
 	return nil, nil
@@ -85,22 +95,22 @@ func (list *DoublyLinkedList) RemoveNode(index int) (interface{}, error) {
 	var item interface{}
 
 	if index == 1 {
-		item = list.head.value
-		list.head = list.head.next
+		item = list.head.Value
+		list.head = list.head.Next
 	} else if index == list.size {
-		item = list.tail.value
-		list.tail = list.tail.previous
-		list.tail.next = nil
+		item = list.tail.Value
+		list.tail = list.tail.Previous
+		list.tail.Next = nil
 	} else {
 		currentNode := list.head
 		prevNode := list.head
 		for i := 1; i <= index-1; i++ {
 			prevNode = currentNode
-			currentNode = currentNode.next
+			currentNode = currentNode.Next
 		}
-		item = currentNode.value
-		prevNode.next = currentNode.next
-		currentNode.next.previous = prevNode
+		item = currentNode.Value
+		prevNode.Next = currentNode.Next
+		currentNode.Next.Previous = prevNode
 	}
 	list.size--
 	return item, nil
@@ -113,10 +123,10 @@ func (list *DoublyLinkedList) GetList() []interface{} {
 	if currentNode == nil {
 		return values
 	}
-	values = append(values, currentNode.value)
-	for currentNode.next != nil {
-		currentNode = currentNode.next
-		values = append(values, currentNode.value)
+	values = append(values, currentNode.Value)
+	for currentNode.Next != nil {
+		currentNode = currentNode.Next
+		values = append(values, currentNode.Value)
 	}
 	return values
 }
@@ -129,12 +139,12 @@ func (list *DoublyLinkedList) Get(index int) interface{} {
 	//	return "", errors.New("linked list is empty")
 	//}
 	if index == 1 {
-		value = currentNode.value
+		value = currentNode.Value
 	} else {
 		for i := 1; i <= index-1; i++ {
-			currentNode = currentNode.next
+			currentNode = currentNode.Next
 		}
-		value = currentNode.value
+		value = currentNode.Value
 	}
 	return value
 }
@@ -144,121 +154,4 @@ func (list *DoublyLinkedList) Clear() {
 	list.head = nil
 	list.tail = nil
 	list.size = 0
-}
-
-// getFieldValue return the value of a field of a given element.
-func getFieldValue(itf interface{}, field string) interface{} {
-	rfl := reflect.ValueOf(itf).Elem()
-	value := rfl.FieldByName(field).Interface()
-	return value
-}
-
-// FindByUsername iterates and return element from sorted linked link by username.
-func (list *DoublyLinkedList) FindByUsername(username string) interface{} {
-	if len(username) > 0 {
-		return list.recursiveBinarySearchByUsername(list.head, list.tail, username, list.size)
-	}
-	return nil
-}
-
-// recursiveBinarySearchByUsername performs recursive binary search on sorted linked list.
-func (list *DoublyLinkedList) recursiveBinarySearchByUsername(firstNode *node, lastNode *node, value string, size int) interface{} {
-	if firstNode == nil || lastNode == nil {
-		return nil
-	}
-	firstNodeVal := getFieldValue(firstNode.value, "Username").(string)
-	lastNodeVal := getFieldValue(lastNode.value, "Username").(string)
-	if firstNodeVal > lastNodeVal {
-		return nil
-	} else {
-		mid := size / 2
-		midNode := middleNode(firstNode, mid)
-		midNodeVal := getFieldValue(midNode.value, "Username").(string)
-		if midNodeVal == value {
-			return midNode.value
-		} else {
-			if value < midNodeVal {
-				return list.recursiveBinarySearchByUsername(firstNode, midNode.previous, value, mid)
-			} else {
-				return list.recursiveBinarySearchByUsername(midNode.next, lastNode, value, mid)
-			}
-		}
-	}
-}
-
-// middleNode return the middle element within a given range of elements.
-func middleNode(start *node, mid int) *node {
-	if start == nil {
-		return nil
-	}
-	for i := 1; i < mid; i++ {
-		start = start.next
-	}
-	return start
-}
-
-// PrintAllNodes prints all elements in the linked list to terminal.
-func (list *DoublyLinkedList) PrintAllNodes() error {
-	currentNode := list.head
-	if currentNode == nil {
-		fmt.Println("Linked list is empty.")
-		return nil
-	}
-	fmt.Printf("%+v\n", currentNode.value)
-	for currentNode.next != nil {
-		currentNode = currentNode.next
-		fmt.Printf("%+v\n", currentNode.value)
-	}
-	return nil
-}
-
-// swapData Swaps value between two nodes
-func (list *DoublyLinkedList) swapData(first, second *node) {
-	value := first.value
-	first.value = second.value
-	second.value = value
-}
-
-// InsertionSort Sort elements using insertion sort
-func (list *DoublyLinkedList) InsertionSort() {
-	// Get first node
-	var front = list.head
-	var back *node = nil
-	for front != nil {
-		// Get next node
-		back = front.next
-		// Update node value when consecutive nodes are not sort
-		for back != nil && back.previous != nil {
-			backVal := getFieldValue(back.value, "Username").(string)
-			prevVal := getFieldValue(back.previous.value, "Username").(string)
-			if backVal < prevVal {
-				// Modified node data
-				list.swapData(back, back.previous)
-			}
-			// Visit to previous node
-			back = back.previous
-		}
-		// Visit to next node
-		front = front.next
-	}
-}
-
-// SearchByMobileNumber iterates and return element from sorted linked link by mobile number.
-func (list *DoublyLinkedList) SearchByMobileNumber(mobileNum int) interface{} {
-	//var ret interface{}
-	ret := list.recursiveSeqSearchByMobileNumber(list.head, mobileNum)
-	return ret
-}
-
-// recursiveSeqSearchByMobileNumber performs recursive sequential search on linked list.
-func (list *DoublyLinkedList) recursiveSeqSearchByMobileNumber(node *node, value int) interface{} {
-	if node == nil {
-		return nil
-	} else {
-		phoneNum := getFieldValue(node.value, "MobileNumber").(int)
-		if phoneNum == value {
-			return node.value
-		}
-		return list.recursiveSeqSearchByMobileNumber(node.next, value)
-	}
 }

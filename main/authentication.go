@@ -4,13 +4,24 @@ import (
 	"net/http"
 	"time"
 
-	dll "github.com/shiweii/doublylinkedlist"
-	"github.com/shiweii/user"
-
 	uuid "github.com/satori/go.uuid"
+	"github.com/shiweii/user"
 )
 
-func authenticationCheck(res http.ResponseWriter, req *http.Request, userList **dll.DoublyLinkedList, checkAdmin bool) (*user.User, bool, int) {
+func createNewCookie(id string) *http.Cookie {
+	myCookie := &http.Cookie{
+		Name:     "myCookie",
+		Expires:  time.Now().AddDate(0, 0, 1),
+		Value:    id,
+		HttpOnly: true,
+		Path:     "/",
+		Domain:   "localhost",
+		Secure:   true,
+	}
+	return myCookie
+}
+
+func authenticationCheck(res http.ResponseWriter, req *http.Request, userList *user.DoublyLinkedList, checkAdmin bool) (*user.User, bool, int) {
 	// Check if users is logged in
 	if !alreadyLoggedIn(req, userList) {
 		// Expire cookie to prevent attacker from reusing this cookie
@@ -38,18 +49,17 @@ func authenticationCheck(res http.ResponseWriter, req *http.Request, userList **
 	return myUser, false, 0
 }
 
-func alreadyLoggedIn(req *http.Request, userList **dll.DoublyLinkedList) bool {
+func alreadyLoggedIn(req *http.Request, userList *user.DoublyLinkedList) bool {
 	myCookie, err := req.Cookie("myCookie")
 	if err != nil {
 		return false
 	}
 	username := mapSessions[myCookie.Value]
-
-	ret := (**userList).FindByUsername(username)
+	ret := (*userList).FindByUsername(username)
 	return ret != nil
 }
 
-func getUser(res http.ResponseWriter, req *http.Request, userList **dll.DoublyLinkedList) *user.User {
+func getUser(res http.ResponseWriter, req *http.Request, userList *user.DoublyLinkedList) *user.User {
 	// get current session cookie
 	myCookie, err := req.Cookie("myCookie")
 	if err != nil {
@@ -63,8 +73,8 @@ func getUser(res http.ResponseWriter, req *http.Request, userList **dll.DoublyLi
 	// if the user exists already, get user
 	var myUser *user.User
 	if username, ok := mapSessions[myCookie.Value]; ok {
-		ret := (**userList).FindByUsername(username)
-		myUser = ret.(*user.User)
+		userObj := (*userList).FindByUsername(username)
+		myUser = userObj
 	}
 	return myUser
 }

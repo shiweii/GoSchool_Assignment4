@@ -1,4 +1,5 @@
-package encryptdecrypt
+// Package cryptography implements cryptography for file encryption and decryption
+package cryptography
 
 import (
 	"crypto/aes"
@@ -12,10 +13,8 @@ import (
 	util "github.com/shiweii/utility"
 )
 
-/*
-	File might remain decrypted if a panic occur,
-	this function will encrypt the file.
-*/
+// CheckEncryption check if file is encrypted.
+// Will perform encryption if file is not encrypted.
 func CheckEncryption(encryptedFile string, decryptedFile string) {
 	_, err := ioutil.ReadFile(encryptedFile)
 	if err != nil {
@@ -23,6 +22,7 @@ func CheckEncryption(encryptedFile string, decryptedFile string) {
 	}
 }
 
+// EncryptFile performs AES-256 encryption on file, plaintext file will then be deleted.
 func EncryptFile(path string, resultPath string) {
 	plaintext, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -60,6 +60,7 @@ func EncryptFile(path string, resultPath string) {
 	}
 }
 
+// DecryptFile performs AES-256 description on file, encrypted file will then be deleted.
 func DecryptFile(path string, resultPath string) {
 	ciphertext, err := ioutil.ReadFile(path)
 	if err != nil {

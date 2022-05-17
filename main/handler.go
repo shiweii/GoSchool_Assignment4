@@ -1,23 +1,20 @@
 package main
 
 import (
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
-
+	"github.com/gorilla/mux"
+	uuid "github.com/satori/go.uuid"
 	app "github.com/shiweii/appointment"
-	bst "github.com/shiweii/binarysearchtree"
+	ede "github.com/shiweii/cryptography"
 	dll "github.com/shiweii/doublylinkedlist"
-	ede "github.com/shiweii/encryptdecrypt"
 	"github.com/shiweii/logger"
 	"github.com/shiweii/user"
 	util "github.com/shiweii/utility"
 	"github.com/shiweii/validator"
-
-	"github.com/gorilla/mux"
-	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 )
 
 const (
@@ -27,7 +24,7 @@ const (
 	enumUpcoming = "upcoming"
 )
 
-func indexHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
+func indexHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -57,7 +54,7 @@ func indexHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
-func signupHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
+func signupHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -119,7 +116,7 @@ func signupHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 				ViewData.ValidateUserName = false
 			} else {
 				// check if username exist/ taken
-				userItf := (**userList).FindByUsername(ViewData.InputUserName)
+				userItf := (*userList).FindByUsername(ViewData.InputUserName)
 				if userItf != nil {
 					ViewData.ValidateUserName = false
 					ViewData.UserNameTaken = true
@@ -142,13 +139,9 @@ func signupHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			if ViewData.ValidateFirstName && ViewData.ValidateLastName && ViewData.ValidateUserName && ViewData.ValidatePassword && ViewData.ValidateMobileNumber {
 				var myUser user.User
 				// create session
-				id := uuid.NewV4()
-				myCookie := &http.Cookie{
-					Name:  "myCookie",
-					Value: id.String(),
-				}
-				http.SetCookie(res, myCookie)
-				mapSessions[myCookie.Value] = ViewData.InputUserName
+				cookie := createNewCookie(uuid.NewV4().String())
+				http.SetCookie(res, cookie)
+				mapSessions[cookie.Value] = ViewData.InputUserName
 
 				bPassword, err := bcrypt.GenerateFromPassword([]byte(ViewData.InputPassword), bcrypt.MinCost)
 				if err != nil {
@@ -166,10 +159,10 @@ func signupHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 				myUser.MobileNumber = mobileNum
 
 				// Add into linklist and JSON
-				if err = (**userList).Add(&myUser); err != nil {
+				if err = (*userList).Add(&myUser); err != nil {
 					logger.Error.Printf("%v: Error:", util.CurrFuncName(), err)
 				} else {
-					(**userList).InsertionSort()
+					(*userList).InsertionSort()
 					user.AddUserDate(&myUser)
 				}
 				// redirect to patient landing page
@@ -183,7 +176,7 @@ func signupHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
-func loginHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
+func loginHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -227,7 +220,7 @@ func loginHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 
 			// check if user exist with username
 			if !ViewData.LoginFail {
-				userItf = (**userList).FindByUsername(inputUserName)
+				userItf = (*userList).FindByUsername(inputUserName)
 				if userItf == nil {
 					ViewData.LoginFail = true
 					logger.Info.Printf("%v: Login fail. user: %v", util.CurrFuncName(), inputUserName)
@@ -253,16 +246,11 @@ func loginHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			}
 
 			if !ViewData.LoginFail {
-				id := uuid.NewV4()
-				myCookie := &http.Cookie{
-					Name:    "myCookie",
-					Expires: time.Now().AddDate(0, 0, 1),
-					Value:   id.String(),
-				}
-				go killOtherSession(myCookie)
+				cookie := createNewCookie(uuid.NewV4().String())
+				go killOtherSession(cookie)
+				http.SetCookie(res, cookie)
+				mapSessions[cookie.Value] = userObj.Username
 				logger.Info.Printf("%v: Login successful. user:%v", util.CurrFuncName(), userObj.Username)
-				http.SetCookie(res, myCookie)
-				mapSessions[myCookie.Value] = userObj.Username
 				http.Redirect(res, req, "/appointments", http.StatusSeeOther)
 				return
 			}
@@ -273,7 +261,7 @@ func loginHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
-func logoutHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
+func logoutHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		if !alreadyLoggedIn(req, userList) {
 			http.Redirect(res, req, "/", http.StatusSeeOther)
@@ -297,7 +285,7 @@ func logoutHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
-func appointmentListHandler(userList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree **bst.BinarySearchTree) http.HandlerFunc {
+func appointmentListHandler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -317,7 +305,7 @@ func appointmentListHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 			LoggedInUser *user.User
 			PageTitle    string
 			CurrentPage  string
-			Appointments []*bst.BinaryNode
+			Appointments []*app.Appointment
 			Sessions     []interface{}
 			Dentists     []*user.User
 			Option       string
@@ -328,7 +316,7 @@ func appointmentListHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 			"MA",
 			nil,
 			(**appointmentSessionList).GetList(),
-			user.GetDentistList((**userList).GetList()),
+			(*userList).GetDentistList(),
 			"",
 			time.Now().Format("2006-01-02"),
 		}
@@ -338,7 +326,7 @@ func appointmentListHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 
 		// If logged in as admin, display all appointments
 		if myUser.Role == enumAdmin {
-			ViewData.Appointments = (**appointmentTree).GetAllAppointments(nil, "")
+			ViewData.Appointments = (*appointmentTree).GetAllAppointments(nil, "")
 		}
 
 		// If logged in as patient, display appointments based on selection
@@ -347,9 +335,9 @@ func appointmentListHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 				ViewData.Option = enumUpcoming
 			}
 			if ViewData.Option == enumUpcoming {
-				ViewData.Appointments = (**appointmentTree).GetUpComingAppointments(myUser, enumPatient)
+				ViewData.Appointments = (*appointmentTree).GetUpComingAppointments(myUser, enumPatient)
 			} else {
-				ViewData.Appointments = (**appointmentTree).GetAllAppointments(myUser, enumPatient)
+				ViewData.Appointments = (*appointmentTree).GetAllAppointments(myUser, enumPatient)
 			}
 		}
 
@@ -361,62 +349,62 @@ func appointmentListHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 			inputSession := strings.TrimSpace(req.FormValue("inputSession"))
 
 			// Data conversation
-			dentist := (**userList).FindByUsername(inputDentist)
+			dentist := (*userList).FindByUsername(inputDentist)
 			appointmentDate, _ := time.Parse("2006-01-02", inputDate)
 			appointmentSession, _ := strconv.Atoi(inputSession)
 			patientMobileNumber, _ := strconv.Atoi(inputPatientMobileNumber)
 
 			// If inputs are valid
-			//if !(dentist == nil && len(inputDate) == 0 && appointmentSession == 0 && len(inputPatientMobileNumber) == 0) {
+			if !(dentist == nil && len(inputDate) == 0 && appointmentSession == 0 && len(inputPatientMobileNumber) == 0) {
 
-			// Initialize channels
-			chSearchDate := make(chan []*bst.BinaryNode)
-			chSearchPatient := make(chan []*bst.BinaryNode)
-			chSearchDentist := make(chan []*bst.BinaryNode)
-			chSearchSession := make(chan []*bst.BinaryNode)
-			filterCount := 0
+				// Initialize channels
+				chSearchDate := make(chan []*app.Appointment)
+				chSearchPatient := make(chan []*app.Appointment)
+				chSearchDentist := make(chan []*app.Appointment)
+				chSearchSession := make(chan []*app.Appointment)
+				filterCount := 0
 
-			if dentist != nil {
-				filterCount++
-				go (**appointmentTree).SearchAllByField(enumDentist, dentist, chSearchDentist)
-			}
-			if len(inputDate) > 0 {
-				filterCount++
-				go (**appointmentTree).SearchAllByField("date", appointmentDate.Format("2006-01-02"), chSearchDate)
-			}
-			if len(inputPatientMobileNumber) > 0 {
-				filterCount++
-				patient := (**userList).SearchByMobileNumber(patientMobileNumber)
-				go (**appointmentTree).SearchAllByField(enumPatient, patient, chSearchPatient)
-			}
-			if appointmentSession > 0 {
-				filterCount++
-				go (**appointmentTree).SearchAllByField("session", appointmentSession, chSearchSession)
-			}
-
-			var result []*bst.BinaryNode
-			for i := 0; i < filterCount; i++ {
-				select {
-				case ret := <-chSearchDate:
-					result = append(result, ret...)
-				case ret2 := <-chSearchPatient:
-					result = append(result, ret2...)
-				case ret3 := <-chSearchDentist:
-					result = append(result, ret3...)
-				case ret4 := <-chSearchSession:
-					result = append(result, ret4...)
+				if dentist != nil {
+					filterCount++
+					go (*appointmentTree).SearchAllByField(enumDentist, dentist, chSearchDentist)
 				}
+				if len(inputDate) > 0 {
+					filterCount++
+					go (*appointmentTree).SearchAllByField("date", appointmentDate.Format("2006-01-02"), chSearchDate)
+				}
+				if len(inputPatientMobileNumber) > 0 {
+					filterCount++
+					patient := (*userList).SearchByMobileNumber(patientMobileNumber)
+					go (*appointmentTree).SearchAllByField(enumPatient, patient, chSearchPatient)
+				}
+				if appointmentSession > 0 {
+					filterCount++
+					go (*appointmentTree).SearchAllByField("session", appointmentSession, chSearchSession)
+				}
+
+				var result []*app.Appointment
+				for i := 0; i < filterCount; i++ {
+					select {
+					case ret := <-chSearchDate:
+						result = append(result, ret...)
+					case ret2 := <-chSearchPatient:
+						result = append(result, ret2...)
+					case ret3 := <-chSearchDentist:
+						result = append(result, ret3...)
+					case ret4 := <-chSearchSession:
+						result = append(result, ret4...)
+					}
+				}
+				ViewData.Appointments = app.GetDuplicate(result, filterCount)
 			}
-			ViewData.Appointments = app.GetDuplicate(result, filterCount)
 		}
-		//}
 		if err := tpl.ExecuteTemplate(res, "appointmentList.gohtml", ViewData); err != nil {
 			logger.Error.Println(err)
 		}
 	}
 }
 
-func appointmentSearchHandler(userList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree **bst.BinarySearchTree) http.HandlerFunc {
+func appointmentSearchHandler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -439,7 +427,7 @@ func appointmentSearchHandler(userList, appointmentSessionList **dll.DoublyLinke
 			Dentist         *user.User
 			Dentists        []*user.User
 			TodayDate       string
-			DentistsSession []app.AppointmentSession
+			DentistsSession []app.AppSession
 			SelectedDate    string
 			FormProcessed   bool
 		}{
@@ -447,7 +435,7 @@ func appointmentSearchHandler(userList, appointmentSessionList **dll.DoublyLinke
 			"Search Available Appointment",
 			"SAA",
 			nil,
-			user.GetDentistList((**userList).GetList()),
+			userList.GetDentistList(),
 			time.Now().Format("2006-01-02"),
 			nil,
 			"",
@@ -460,12 +448,12 @@ func appointmentSearchHandler(userList, appointmentSessionList **dll.DoublyLinke
 			inputDate := strings.TrimSpace(req.FormValue("inputDate"))
 
 			// Data conversion
-			dentist := (**userList).FindByUsername(inputDentist)
+			dentist := (*userList).FindByUsername(inputDentist)
 			appointmentDate, _ := time.Parse("2006-01-02", inputDate)
 
 			// If valid dentist and input date is entered
 			if !(dentist == nil || len(inputDate) == 0) {
-				ViewData.Dentist = dentist.(*user.User)
+				ViewData.Dentist = dentist
 				ViewData.DentistsSession = app.GetDentistAvailability(appointmentSessionList, appointmentTree, appointmentDate, ViewData.Dentist)
 				ViewData.SelectedDate = appointmentDate.Format("2006-01-02")
 			}
@@ -477,7 +465,7 @@ func appointmentSearchHandler(userList, appointmentSessionList **dll.DoublyLinke
 	}
 }
 
-func appointmentCreateHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
+func appointmentCreateHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -502,7 +490,7 @@ func appointmentCreateHandler(userList **dll.DoublyLinkedList) http.HandlerFunc 
 			myUser,
 			"Create New Appointment",
 			"CNA",
-			user.GetDentistList((**userList).GetList()),
+			(*userList).GetDentistList(),
 		}
 
 		if err := tpl.ExecuteTemplate(res, "appointmentCreate_step1.gohtml", ViewData); err != nil {
@@ -511,7 +499,7 @@ func appointmentCreateHandler(userList **dll.DoublyLinkedList) http.HandlerFunc 
 	}
 }
 
-func appointmentCreatePart2Handler(userList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree **bst.BinarySearchTree) http.HandlerFunc {
+func appointmentCreatePart2Handler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -533,7 +521,7 @@ func appointmentCreatePart2Handler(userList, appointmentSessionList **dll.Doubly
 			CurrentPage  string
 			Dentist      *user.User
 			TodayDate    string
-			Sessions     []app.AppointmentSession
+			Sessions     []app.AppSession
 			SelectedDate string
 		}{
 			myUser,
@@ -548,11 +536,7 @@ func appointmentCreatePart2Handler(userList, appointmentSessionList **dll.Doubly
 		// Get data from query string
 		vars := mux.Vars(req)
 		dentistReq := vars["dentist"]
-		dentist := (**userList).FindByUsername(dentistReq)
-
-		if dentist != nil {
-			ViewData.Dentist = dentist.(*user.User)
-		}
+		ViewData.Dentist = (*userList).FindByUsername(dentistReq)
 
 		// Process form submission
 		if req.Method == http.MethodPost {
@@ -569,7 +553,7 @@ func appointmentCreatePart2Handler(userList, appointmentSessionList **dll.Doubly
 	}
 }
 
-func appointmentCreateConfirmHandler(userList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree **bst.BinarySearchTree) http.HandlerFunc {
+func appointmentCreateConfirmHandler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -615,8 +599,8 @@ func appointmentCreateConfirmHandler(userList, appointmentSessionList **dll.Doub
 		}
 
 		// Validating inputs
-		dentistItf := (**userList).FindByUsername(dentistReq)
-		if dentistItf == nil {
+		ViewData.Dentist = (*userList).FindByUsername(dentistReq)
+		if ViewData.Dentist == nil {
 			ViewData.IsInputError = true
 		}
 		appointmentDate, err := time.Parse("2006-01-02", dateReq)
@@ -637,9 +621,9 @@ func appointmentCreateConfirmHandler(userList, appointmentSessionList **dll.Doub
 		}
 
 		logger.Info.Printf("%v: Dentist [%v], Date [%v], Session [%v]", util.CurrFuncName(), dentistReq, dateReq, sessionReq)
-		ViewData.Dentist = dentistItf.(*user.User)
+
 		ViewData.Date = appointmentDate.Format("2006-01-02")
-		session := (**appointmentSessionList).Get(ses).(app.AppointmentSession)
+		session := (**appointmentSessionList).Get(ses).(app.AppSession)
 		ViewData.StartTime = session.StartTime
 		ViewData.EndTime = session.EndTime
 
@@ -652,8 +636,6 @@ func appointmentCreateConfirmHandler(userList, appointmentSessionList **dll.Doub
 			if successful {
 				logger.Info.Printf("%v: Appointment created successfully.", util.CurrFuncName())
 				logger.Info.Printf("%v: Adding appointment data into JSON: id:[%v], username:[%v], dentist:[%v], date:[%v], session:[%v]", util.CurrFuncName(), id, myUser.Username, ViewData.Dentist.Username, ViewData.Date, session.Num)
-				appointment := app.NewAppointment(id, myUser.Username, ViewData.Dentist.Username, ViewData.Date, session.Num)
-				app.AddAppointmentData(appointment)
 				ViewData.Successful = true
 			}
 			ViewData.FormSubmitted = true
@@ -665,7 +647,7 @@ func appointmentCreateConfirmHandler(userList, appointmentSessionList **dll.Doub
 	}
 }
 
-func appointmentEditHandler(userList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree **bst.BinarySearchTree) http.HandlerFunc {
+func appointmentEditHandler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -685,9 +667,9 @@ func appointmentEditHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 			LoggedInUser    *user.User
 			PageTitle       string
 			CurrentPage     string
-			Appointment     *bst.BinaryNode
+			Appointment     *app.Appointment
 			Dentists        []*user.User
-			DentistsSession []app.AppointmentSession
+			DentistsSession []app.AppSession
 			Sessions        []interface{}
 			TodayDate       string
 			SelectedDate    string
@@ -698,9 +680,9 @@ func appointmentEditHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 			"Change Appointment",
 			"MA",
 			nil,
+			(*userList).GetDentistList(),
 			nil,
-			nil,
-			nil,
+			(**appointmentSessionList).GetList(),
 			time.Now().Format("2006-01-02"),
 			"",
 			"",
@@ -711,7 +693,7 @@ func appointmentEditHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 		appointmentReq := vars["id"]
 
 		appointmentID, _ := strconv.Atoi(appointmentReq)
-		ViewData.Appointment = (**appointmentTree).GetAppointmentByID(appointmentID)
+		ViewData.Appointment = (*appointmentTree).GetAppointmentByID(appointmentID)
 		if ViewData.Appointment == nil {
 			ViewData.IsInputError = true
 			logger.Error.Printf("%v: Application does not exist ID:[%v]", util.CurrFuncName(), appointmentID)
@@ -720,12 +702,7 @@ func appointmentEditHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 			}
 			return
 		}
-
-		ViewData.Appointment = (**appointmentTree).GetAppointmentByID(appointmentID)
-		ViewData.Sessions = (**appointmentSessionList).GetList()
 		ViewData.SelectedDentist = ViewData.Appointment.Dentist.(*user.User).Username
-		users := (**userList).GetList()
-		ViewData.Dentists = user.GetDentistList(users)
 
 		// Process form submission
 		if req.Method == http.MethodPost {
@@ -733,13 +710,12 @@ func appointmentEditHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 			inputDentist := strings.TrimSpace(req.FormValue("appDentist"))
 			appointmentDate, err := time.Parse("2006-01-02", inputDate)
 			if err == nil {
-				ret := (**userList).FindByUsername(inputDentist)
-				dentist := ret.(*user.User)
-				var sessionList []app.AppointmentSession
-				schedule := (**appointmentTree).GetAppointmentByDate(appointmentDate.Format("2006-01-02"), dentist.Role, dentist)
-				retSessionList := (**appointmentSessionList).GetList()
+				dentist := (*userList).FindByUsername(inputDentist)
+				var sessionList []app.AppSession
+				schedule := (*appointmentTree).GetAppointmentByDate(appointmentDate.Format("2006-01-02"), dentist.Role, dentist)
+				retSessionList := ViewData.Sessions
 				for _, v := range retSessionList {
-					session := v.(app.AppointmentSession)
+					session := v.(app.AppSession)
 					for _, data := range schedule {
 						if data.Session == session.Num {
 							session.Available = false
@@ -759,7 +735,7 @@ func appointmentEditHandler(userList, appointmentSessionList **dll.DoublyLinkedL
 	}
 }
 
-func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree **bst.BinarySearchTree) http.HandlerFunc {
+func appointmentEditConfirmHandler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -785,7 +761,7 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 			LoggedInUser       *user.User
 			PageTitle          string
 			CurrentPage        string
-			CurrentAppointment *bst.BinaryNode
+			CurrentAppointment *app.Appointment
 			OldDentist         *user.User
 			OldDate            string
 			OldSession         int
@@ -794,6 +770,8 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 			EditedSession      int
 			SessionList        []interface{}
 			Successful         bool
+			Unsuccessful       bool
+			UnsuccessfulMsg    string
 			IsInputError       bool
 		}{
 			myUser,
@@ -809,6 +787,8 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 			(**appointmentSessionList).GetList(),
 			false,
 			false,
+			"",
+			false,
 		}
 
 		// Validate Data
@@ -818,7 +798,7 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 			ViewData.IsInputError = true
 			logger.Error.Printf("%v: Error Parsing ID [%v]", util.CurrFuncName(), appointmentReq)
 		}
-		ViewData.CurrentAppointment = (**appointmentTree).GetAppointmentByID(appointmentID)
+		ViewData.CurrentAppointment = (*appointmentTree).GetAppointmentByID(appointmentID)
 		if ViewData.CurrentAppointment == nil {
 			ViewData.IsInputError = true
 			logger.Error.Printf("%v: Application does not exist ID:[%v]", util.CurrFuncName(), appointmentID)
@@ -827,12 +807,11 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 		ViewData.OldDate = ViewData.CurrentAppointment.Date
 		ViewData.OldSession = ViewData.CurrentAppointment.Session
 		// Validate Dentist
-		dentistItf := (**userList).FindByUsername(dentistReq)
-		if dentistItf == nil {
+		ViewData.EditedDentist = (*userList).FindByUsername(dentistReq)
+		if ViewData.EditedDentist == nil {
 			ViewData.IsInputError = true
 			logger.Error.Printf("%v: Dentist [%v] not found", util.CurrFuncName(), dentistReq)
 		}
-		ViewData.EditedDentist = dentistItf.(*user.User)
 		// Validate Date
 		parsedDate, err := time.Parse("2006-01-02", dateReq)
 		if err != nil {
@@ -857,8 +836,8 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 		logger.Info.Printf("%v: Application ID [%v], Dentist [%v], Date [%v], Session [%v]", util.CurrFuncName(), appointmentReq, dentistReq, dateReq, sessionReq)
 
 		if req.Method == http.MethodPost {
-			currentAppointment := app.NewAppointment(ViewData.CurrentAppointment.ID, ViewData.CurrentAppointment.Patient.(*user.User).Username, ViewData.CurrentAppointment.Dentist.(*user.User).Username, ViewData.CurrentAppointment.Date, ViewData.CurrentAppointment.Session)
-			newAppointment := app.NewAppointment(ViewData.CurrentAppointment.ID, ViewData.CurrentAppointment.Patient.(*user.User).Username, ViewData.CurrentAppointment.Dentist.(*user.User).Username, ViewData.CurrentAppointment.Date, ViewData.CurrentAppointment.Session)
+			currentAppointment := app.New(ViewData.CurrentAppointment.ID, ViewData.CurrentAppointment.Patient.(*user.User).Username, ViewData.CurrentAppointment.Dentist.(*user.User).Username, ViewData.CurrentAppointment.Date, ViewData.CurrentAppointment.Session)
+			newAppointment := app.New(ViewData.CurrentAppointment.ID, ViewData.CurrentAppointment.Patient.(*user.User).Username, ViewData.CurrentAppointment.Dentist.(*user.User).Username, ViewData.CurrentAppointment.Date, ViewData.CurrentAppointment.Session)
 			// If there's no change to appointment date
 			if ViewData.CurrentAppointment.Date == ViewData.EditedDate {
 				// If there's a change in dentist
@@ -877,19 +856,20 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 			} else {
 				// If there's change to appointment date
 				var id = util.GenerateID()
-				// Add new appointment into BST
-				(**appointmentTree).Add(id, ViewData.EditedDate, ViewData.EditedSession, ViewData.EditedDentist, ViewData.CurrentAppointment.Patient)
-				// Add new appointment into JSON
-				appointmentData := app.NewAppointment(id, ViewData.CurrentAppointment.Patient.(*user.User).Username, ViewData.EditedDentist.Username, ViewData.EditedDate, ViewData.EditedSession)
-				app.AddAppointmentData(appointmentData)
-				// Delete old appointment from BST
-				if err := (**appointmentTree).Remove(ViewData.CurrentAppointment); err != nil {
-					logger.Error.Println(err)
+				chn := make(chan bool)
+				go app.CreateNewAppointment(id, ViewData.EditedDate, ViewData.EditedSession, ViewData.EditedDentist, ViewData.CurrentAppointment.Patient.(*user.User), appointmentTree, chn)
+				successful := <-chn
+				if successful {
+					if err := (*appointmentTree).DeleteAppointment(ViewData.CurrentAppointment); err != nil {
+						logger.Error.Println(err)
+						ViewData.Unsuccessful = true
+						ViewData.UnsuccessfulMsg = "There's an error processing your transaction, please try again later."
+					} else {
+						ViewData.Successful = true
+					}
 				} else {
-					// Delete old appointment from JSON
-					app.DeleteAppointmentData(currentAppointment.ID)
+					ViewData.Unsuccessful = true
 				}
-				ViewData.Successful = true
 			}
 		}
 		if err := tpl.ExecuteTemplate(res, "appointmentEditConfirm.gohtml", ViewData); err != nil {
@@ -898,7 +878,7 @@ func appointmentEditConfirmHandler(userList, appointmentSessionList **dll.Doubly
 	}
 }
 
-func appointmentDeleteHandler(userList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree **bst.BinarySearchTree) http.HandlerFunc {
+func appointmentDeleteHandler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -918,7 +898,7 @@ func appointmentDeleteHandler(userList, appointmentSessionList **dll.DoublyLinke
 			PageTitle    string
 			LoggedInUser *user.User
 			CurrentPage  string
-			Appointment  *bst.BinaryNode
+			Appointment  *app.Appointment
 			Sessions     []interface{}
 			Successful   bool
 			IsInputError bool
@@ -936,7 +916,7 @@ func appointmentDeleteHandler(userList, appointmentSessionList **dll.DoublyLinke
 		appointmentReq := vars["id"]
 
 		appointmentID, _ := strconv.Atoi(appointmentReq)
-		ViewData.Appointment = (**appointmentTree).GetAppointmentByID(appointmentID)
+		ViewData.Appointment = (*appointmentTree).GetAppointmentByID(appointmentID)
 		if ViewData.Appointment == nil {
 			ViewData.IsInputError = true
 			logger.Error.Printf("%v: Application does not exist ID:[%v]", util.CurrFuncName(), appointmentID)
@@ -950,10 +930,9 @@ func appointmentDeleteHandler(userList, appointmentSessionList **dll.DoublyLinke
 
 		// Process form submission
 		if req.Method == http.MethodPost {
-			if err := (**appointmentTree).Remove(ViewData.Appointment); err != nil {
+			if err := (*appointmentTree).DeleteAppointment(ViewData.Appointment); err != nil {
 				logger.Error.Printf("%v: Error: %v", util.CurrFuncName(), err)
 			} else {
-				app.DeleteAppointmentData(ViewData.Appointment.ID)
 				ViewData.Successful = true
 			}
 		}
@@ -963,7 +942,7 @@ func appointmentDeleteHandler(userList, appointmentSessionList **dll.DoublyLinke
 	}
 }
 
-func userListHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
+func userListHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -991,7 +970,7 @@ func userListHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			myUser,
 			"Manage Users",
 			"MU",
-			(**userList).GetList(),
+			(*userList).GetList(),
 			false,
 			false,
 			"",
@@ -1003,7 +982,7 @@ func userListHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
-func userEditHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
+func userEditHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -1055,8 +1034,8 @@ func userEditHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			ViewData.CurrentPage = "MU"
 		}
 
-		ret := (**userList).FindByUsername(username)
-		if ret == nil {
+		ViewData.UserData = (*userList).FindByUsername(username)
+		if ViewData.UserData == nil {
 			logger.Error.Printf("%v: User Not Found: %v", util.CurrFuncName(), username)
 			if err := tpl.ExecuteTemplate(res, "userEdit.gohtml", ViewData); err != nil {
 				logger.Error.Println(err)
@@ -1064,8 +1043,7 @@ func userEditHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			return
 		}
 
-		ViewData.UserData = ret.(*user.User)
-		copyUser := user.NewUser(ViewData.UserData.Username, ViewData.UserData.Password, ViewData.UserData.Role, ViewData.UserData.FirstName, ViewData.UserData.LastName, ViewData.UserData.MobileNumber)
+		copyUser := user.New(ViewData.UserData.Username, ViewData.UserData.Password, ViewData.UserData.Role, ViewData.UserData.FirstName, ViewData.UserData.LastName, ViewData.UserData.MobileNumber)
 
 		// process form submission
 		if req.Method == http.MethodPost {
@@ -1155,7 +1133,7 @@ func userEditHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
-func userDeleteHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
+func userDeleteHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -1187,14 +1165,14 @@ func userDeleteHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			myUser,
 			"Manage Users",
 			"MU",
-			(**userList).GetList(),
+			(*userList).GetList(),
 			false,
 			false,
 			"",
 		}
 
-		retUser := (**userList).FindByUsername(username)
-		if retUser == nil {
+		userObj := (*userList).FindByUsername(username)
+		if userObj == nil {
 			ViewData.ErrorDelete = true
 			ViewData.ErrorDeleteMsg = "Error deleting user: " + username + ", user does not exist."
 			logger.Error.Printf("%v: User does not exist: %v", util.CurrFuncName(), username)
@@ -1204,7 +1182,6 @@ func userDeleteHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 			return
 		}
 
-		userObj := retUser.(*user.User)
 		// Soft delete user
 		userObj.IsDeleted = true
 		ViewData.Successful = true
@@ -1220,7 +1197,7 @@ func userDeleteHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
-func sessionListHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
+func sessionListHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -1255,7 +1232,7 @@ func sessionListHandler(userList **dll.DoublyLinkedList) http.HandlerFunc {
 		}
 
 		for k, v := range mapSessions {
-			userObj := (**userList).FindByUsername(v).(*user.User)
+			userObj := (*userList).FindByUsername(v)
 			ViewData.Sessions = append(ViewData.Sessions, SessionStruct{SessionID: k, Username: v, Role: userObj.Role})
 		}
 

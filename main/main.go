@@ -1,20 +1,18 @@
 package main
 
 import (
+	"github.com/gorilla/mux"
+	app "github.com/shiweii/appointment"
+	bst "github.com/shiweii/binarysearchtree"
+	ede "github.com/shiweii/cryptography"
+	dll "github.com/shiweii/doublylinkedlist"
+	"github.com/shiweii/logger"
+	"github.com/shiweii/user"
+	util "github.com/shiweii/utility"
 	"html/template"
 	"net/http"
 	"os"
 	"os/signal"
-
-	app "github.com/shiweii/appointment"
-	bst "github.com/shiweii/binarysearchtree"
-	dll "github.com/shiweii/doublylinkedlist"
-	ede "github.com/shiweii/encryptdecrypt"
-	"github.com/shiweii/logger"
-	"github.com/shiweii/user"
-	util "github.com/shiweii/utility"
-
-	"github.com/gorilla/mux"
 )
 
 var (
@@ -29,6 +27,12 @@ var (
 )
 
 func init() {
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Panic.Println(err)
+		}
+	}()
+
 	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*"))
 	// Go routine to verify .env checksum every 5 minutes
 	go util.VerifyCheckSum()
@@ -37,34 +41,34 @@ func init() {
 }
 
 func main() {
-	logger.Info.Println("Server Start...")
+	logger.Info.Println("[Server Start]")
 
+	// Channel to detect ctrl-c and exit the server gracefully
 	sigchld := make(chan os.Signal, 1)
 	signal.Notify(sigchld, os.Interrupt)
 	go func() {
 		<-sigchld
-		logger.Info.Println("Server Stop...")
+		logger.Info.Println("[Server Stop]")
 		logger.CloseLogger()
 		os.Exit(0)
 	}()
 
 	// Initialize new doubly linked-list and binary search tree
 	var (
-		appointmentTree        = bst.New()
-		userList               = dll.New()
+		appointmentTree        = app.BinarySearchTree{BinarySearchTree: bst.New()}
+		userList               = user.DoublyLinkedList{DoublyLinkedList: dll.New()}
 		appointmentSessionList = dll.New()
 	)
 
 	// Initialize Sample Data
-	appointmentSessionList.Add(app.AppointmentSession{Num: 1, StartTime: "09:00", EndTime: "10:00", Available: true})
-	appointmentSessionList.Add(app.AppointmentSession{Num: 2, StartTime: "10:00", EndTime: "11:00", Available: true})
-	appointmentSessionList.Add(app.AppointmentSession{Num: 3, StartTime: "11:00", EndTime: "12:00", Available: true})
-	appointmentSessionList.Add(app.AppointmentSession{Num: 4, StartTime: "13:00", EndTime: "14:00", Available: true})
-	appointmentSessionList.Add(app.AppointmentSession{Num: 5, StartTime: "14:00", EndTime: "15:00", Available: true})
-	appointmentSessionList.Add(app.AppointmentSession{Num: 6, StartTime: "15:00", EndTime: "16:00", Available: true})
-	appointmentSessionList.Add(app.AppointmentSession{Num: 7, StartTime: "16:00", EndTime: "17:00", Available: true})
+	appointmentSessionList.Add(app.AppSession{Num: 1, StartTime: "09:00", EndTime: "10:00", Available: true})
+	appointmentSessionList.Add(app.AppSession{Num: 2, StartTime: "10:00", EndTime: "11:00", Available: true})
+	appointmentSessionList.Add(app.AppSession{Num: 3, StartTime: "11:00", EndTime: "12:00", Available: true})
+	appointmentSessionList.Add(app.AppSession{Num: 4, StartTime: "13:00", EndTime: "14:00", Available: true})
+	appointmentSessionList.Add(app.AppSession{Num: 5, StartTime: "14:00", EndTime: "15:00", Available: true})
+	appointmentSessionList.Add(app.AppSession{Num: 6, StartTime: "15:00", EndTime: "16:00", Available: true})
+	appointmentSessionList.Add(app.AppSession{Num: 7, StartTime: "16:00", EndTime: "17:00", Available: true})
 
-	// Loading Data from JSON
 	users := user.GetEncryptedUserData()
 	for _, userObj := range users {
 		userList.Add(userObj)
@@ -73,9 +77,8 @@ func main() {
 
 	appointments := app.GetAppointmentData()
 	for _, v := range appointments {
-		patient := userList.FindByUsername(v.Patient)
-		dentist := userList.FindByUsername(v.Dentist)
-		appointmentTree.Add(v.ID, v.Date, v.Session, dentist, patient)
+		appointment := app.New(v.ID, userList.FindByUsername(v.Patient.(string)), userList.FindByUsername(v.Dentist.(string)), v.Date, v.Session)
+		appointmentTree.Add(v.Date, appointment)
 	}
 
 	router := mux.NewRouter()
@@ -105,8 +108,7 @@ func main() {
 	// Admin
 	router.HandleFunc("/sessions", sessionListHandler(&userList))
 
-	err := http.ListenAndServe(util.GetEnvVar("PORT"), router)
-	if err != nil {
-		logger.Fatal.Fatalln(err)
+	if err := http.ListenAndServeTLS(util.GetEnvVar("PORT"), util.GetEnvVar("SSL_CERT"), util.GetEnvVar("SSL_KEY"), router); err != nil {
+		logger.Fatal.Fatalln("ListenAndServe: ", err)
 	}
 }
