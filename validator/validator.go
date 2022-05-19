@@ -13,7 +13,7 @@ const (
 	mobileNum         = "^[8-9][0-9]{7}$"
 	usernameMinLength = 5
 	usernameMaxLength = 20
-	PasswordMinLength = 7
+	passwordMinLength = 7
 )
 
 // IsEmpty checks if user input is empty.
@@ -56,7 +56,7 @@ func IsValidPassword(input string) bool {
 		hasNumber  = false
 		hasSpecial = false
 	)
-	if len(input) >= PasswordMinLength {
+	if len(input) >= passwordMinLength {
 		hasMinLen = true
 	}
 	for _, char := range input {

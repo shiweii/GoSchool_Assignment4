@@ -16,6 +16,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// constants variables.
 const (
 	enumPatient  = "patient"
 	enumAdmin    = "admin"
@@ -23,6 +24,7 @@ const (
 	enumUpcoming = "upcoming"
 )
 
+// indexHandler handles request to display index page.
 func indexHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -62,6 +64,7 @@ func indexHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
+// signupHandler handles request to create a new user.
 func signupHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -184,6 +187,7 @@ func signupHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
+// loginHandler handles request to log in existing user.
 func loginHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -263,6 +267,7 @@ func loginHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
+// logoutHandler handles request to log out of existing user.
 func logoutHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		if !alreadyLoggedIn(req, userList) {
@@ -284,6 +289,8 @@ func logoutHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
+// logoutHandler handles request to list all applications.
+// Admin has the ability to search all appointments.
 func appointmentListHandler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -403,6 +410,8 @@ func appointmentListHandler(userList *user.DoublyLinkedList, appointmentSessionL
 	}
 }
 
+// appointmentSearchHandler handles request search for dentist availability,
+// patients are able creates a new appointment using this function.
 func appointmentSearchHandler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -464,6 +473,8 @@ func appointmentSearchHandler(userList *user.DoublyLinkedList, appointmentSessio
 	}
 }
 
+// appointmentCreateHandler handles request to creates a new appointment,
+// patients will first need to select a dentist.
 func appointmentCreateHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -498,6 +509,8 @@ func appointmentCreateHandler(userList *user.DoublyLinkedList) http.HandlerFunc 
 	}
 }
 
+// appointmentCreateHandler creates a new appointment, after dentist selection,
+// patients will need select a date and appointment slot.
 func appointmentCreatePart2Handler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -552,6 +565,8 @@ func appointmentCreatePart2Handler(userList *user.DoublyLinkedList, appointmentS
 	}
 }
 
+// appointmentCreateConfirmHandler display patients the final appointment details
+// for patient's confirmation.
 func appointmentCreateConfirmHandler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -646,6 +661,7 @@ func appointmentCreateConfirmHandler(userList *user.DoublyLinkedList, appointmen
 	}
 }
 
+// appointmentEditHandler handles request to edit an appointment.
 func appointmentEditHandler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -734,6 +750,8 @@ func appointmentEditHandler(userList *user.DoublyLinkedList, appointmentSessionL
 	}
 }
 
+// appointmentEditConfirmHandler display patients the updated appointment details
+// for patient's confirmation.
 func appointmentEditConfirmHandler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -877,6 +895,7 @@ func appointmentEditConfirmHandler(userList *user.DoublyLinkedList, appointmentS
 	}
 }
 
+// appointmentDeleteHandler handles request to cancel an appointment.
 func appointmentDeleteHandler(userList *user.DoublyLinkedList, appointmentSessionList **dll.DoublyLinkedList, appointmentTree *app.BinarySearchTree) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -941,6 +960,7 @@ func appointmentDeleteHandler(userList *user.DoublyLinkedList, appointmentSessio
 	}
 }
 
+// appointmentDeleteHandler handles request to list all users (Admin only).
 func userListHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -981,6 +1001,8 @@ func userListHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
+// appointmentDeleteHandler handles request to edit user detail,
+// only admin has the privilege to edit any user's detail.
 func userEditHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -1132,6 +1154,7 @@ func userEditHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
+// appointmentDeleteHandler handles request to delete a user. User will be "soft deleted".
 func userDeleteHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {
@@ -1196,6 +1219,7 @@ func userDeleteHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	}
 }
 
+// sessionListHandler handles request to list all active sessions (Admin only).
 func sessionListHandler(userList *user.DoublyLinkedList) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		defer func() {

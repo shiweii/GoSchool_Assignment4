@@ -10,7 +10,7 @@ import (
 	"github.com/shiweii/user"
 )
 
-// createNewSecureCookie creates and return a new secure cookie
+// createNewSecureCookie creates and return a new secure cookie.
 func createNewSecureCookie() *http.Cookie {
 	cookie := &http.Cookie{
 		Name:     util.GetEnvVar("COOKIE_NAME"),
@@ -24,6 +24,7 @@ func createNewSecureCookie() *http.Cookie {
 	return cookie
 }
 
+// createNewSecureCookie creates and return a new expired cookie.
 func expireCookie() *http.Cookie {
 	cookie := &http.Cookie{
 		Path:    "/",
@@ -35,6 +36,7 @@ func expireCookie() *http.Cookie {
 	return cookie
 }
 
+// authenticationCheck checks user authentication and returns the appropriate redirection code.
 func authenticationCheck(res http.ResponseWriter, req *http.Request, userList *user.DoublyLinkedList, checkAdmin bool) (*user.User, bool, int) {
 	// Check if users is logged in
 	if !alreadyLoggedIn(req, userList) {
@@ -61,6 +63,7 @@ func authenticationCheck(res http.ResponseWriter, req *http.Request, userList *u
 	return myUser, false, 0
 }
 
+// alreadyLoggedIn checks is user's session exist in session map.
 func alreadyLoggedIn(req *http.Request, userList *user.DoublyLinkedList) bool {
 	cookie, err := req.Cookie(util.GetEnvVar("COOKIE_NAME"))
 	if err != nil {
@@ -71,6 +74,7 @@ func alreadyLoggedIn(req *http.Request, userList *user.DoublyLinkedList) bool {
 	return ret != nil
 }
 
+// getUser get user struct from linked list.
 func getUser(res http.ResponseWriter, req *http.Request, userList *user.DoublyLinkedList) *user.User {
 	// get current session cookie
 	cookie, err := req.Cookie(util.GetEnvVar("COOKIE_NAME"))
@@ -92,6 +96,8 @@ func getUser(res http.ResponseWriter, req *http.Request, userList *user.DoublyLi
 	return myUser
 }
 
+// terminateOtherSession searches and terminates existing session
+// when a new session is created for the same user.
 func terminateOtherSession(sessionID, username string) {
 	// Loop session Map
 	for k, v := range mapSessions {
@@ -102,6 +108,7 @@ func terminateOtherSession(sessionID, username string) {
 	}
 }
 
+// deleteSessionByUsername deletes user's session in session map
 func deleteSessionByUsername(username string) {
 	// Loop session Map
 	for k, v := range mapSessions {

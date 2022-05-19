@@ -5,14 +5,15 @@ package appointment
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"reflect"
+	"time"
+
 	bst "github.com/shiweii/binarysearchtree"
 	dll "github.com/shiweii/doublylinkedlist"
 	"github.com/shiweii/logger"
 	"github.com/shiweii/user"
 	util "github.com/shiweii/utility"
-	"io/ioutil"
-	"reflect"
-	"time"
 )
 
 // Appointment struct stores application data.
@@ -32,7 +33,7 @@ type AppSession struct {
 	Available bool
 }
 
-// BinarySearchTree Extends binarysearchtree package for application related processing.
+// BinarySearchTree extends binarysearchtree package for application related processing.
 type BinarySearchTree struct {
 	*bst.BinarySearchTree
 }

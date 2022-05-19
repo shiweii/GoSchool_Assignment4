@@ -15,6 +15,7 @@ import (
 	util "github.com/shiweii/utility"
 )
 
+// initialize of variables
 var (
 	tpl         *template.Template
 	mapSessions = map[string]string{}
