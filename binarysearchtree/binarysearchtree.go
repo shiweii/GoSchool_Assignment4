@@ -1,8 +1,9 @@
-// Package binarysearchtree implements a binary search tree.
+// Package binarysearchtree implements a binary search tree data structure.
 package binarysearchtree
 
 import (
 	"errors"
+
 	"github.com/shiweii/logger"
 )
 

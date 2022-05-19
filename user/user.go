@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"reflect"
 
-	ede "github.com/shiweii/cryptography"
+	"github.com/shiweii/cryptography"
 	dll "github.com/shiweii/doublylinkedlist"
 	util "github.com/shiweii/utility"
 )
@@ -44,9 +44,9 @@ func New(username, password, role, firstName, lastName string, mobileNumber int)
 
 // GetEncryptedUserData will perform decryption and encryption on user JSON file.
 func GetEncryptedUserData() []*User {
-	ede.DecryptFile(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
+	cryptography.DecryptFile(util.GetEnvVar("KEY"), util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
 	users := getUserData()
-	ede.EncryptFile(util.GetEnvVar("USER_DATA"), util.GetEnvVar("USER_DATA_ENCRYPT"))
+	cryptography.EncryptFile(util.GetEnvVar("KEY"), util.GetEnvVar("USER_DATA"), util.GetEnvVar("USER_DATA_ENCRYPT"))
 	return users
 }
 
@@ -63,7 +63,7 @@ func getUserData() []*User {
 
 // AddUserDate will decrypt, open, marshal, append and encrypt new user data into JSON file.
 func AddUserDate(u *User) {
-	ede.DecryptFile(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
+	cryptography.DecryptFile(util.GetEnvVar("KEY"), util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
 	var users []*User
 	users = getUserData()
 	users = append(users, u)
@@ -72,12 +72,12 @@ func AddUserDate(u *User) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	ede.EncryptFile(util.GetEnvVar("USER_DATA"), util.GetEnvVar("USER_DATA_ENCRYPT"))
+	cryptography.EncryptFile(util.GetEnvVar("KEY"), util.GetEnvVar("USER_DATA"), util.GetEnvVar("USER_DATA_ENCRYPT"))
 }
 
 // UpdateUserData will decrypt, open, marshal, update and encrypt matching user data into JSON file.
 func UpdateUserData(oldUser *User, newUser *User) {
-	ede.DecryptFile(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
+	cryptography.DecryptFile(util.GetEnvVar("KEY"), util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
 	var users = getUserData()
 	for k, v := range users {
 		if reflect.DeepEqual(v, oldUser) {
@@ -89,12 +89,12 @@ func UpdateUserData(oldUser *User, newUser *User) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	ede.EncryptFile(util.GetEnvVar("USER_DATA"), util.GetEnvVar("USER_DATA_ENCRYPT"))
+	cryptography.EncryptFile(util.GetEnvVar("KEY"), util.GetEnvVar("USER_DATA"), util.GetEnvVar("USER_DATA_ENCRYPT"))
 }
 
 // DeleteUserData will decrypt, open, marshal, delete  and encrypt user data using username from JSON file.
 func DeleteUserData(delUser *User) {
-	ede.DecryptFile(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
+	cryptography.DecryptFile(util.GetEnvVar("KEY"), util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
 	var users = getUserData()
 	for k, v := range users {
 		if v.Username == delUser.Username {
@@ -106,7 +106,7 @@ func DeleteUserData(delUser *User) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	ede.EncryptFile(util.GetEnvVar("USER_DATA"), util.GetEnvVar("USER_DATA_ENCRYPT"))
+	cryptography.EncryptFile(util.GetEnvVar("KEY"), util.GetEnvVar("USER_DATA"), util.GetEnvVar("USER_DATA_ENCRYPT"))
 }
 
 // GetDentistList returns all elements in the linked list.

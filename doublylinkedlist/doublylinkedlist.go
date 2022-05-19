@@ -1,4 +1,4 @@
-// Package doublylinkedlist implements a doubly linked list.
+// Package doublylinkedlist implements a doubly linked list data structure.
 package doublylinkedlist
 
 import (

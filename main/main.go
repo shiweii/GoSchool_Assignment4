@@ -1,18 +1,18 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
-	app "github.com/shiweii/appointment"
-	bst "github.com/shiweii/binarysearchtree"
-	ede "github.com/shiweii/cryptography"
-	dll "github.com/shiweii/doublylinkedlist"
-	"github.com/shiweii/logger"
-	"github.com/shiweii/user"
-	util "github.com/shiweii/utility"
 	"html/template"
 	"net/http"
 	"os"
 	"os/signal"
+
+	"github.com/gorilla/mux"
+	app "github.com/shiweii/appointment"
+	bst "github.com/shiweii/binarysearchtree"
+	dll "github.com/shiweii/doublylinkedlist"
+	"github.com/shiweii/logger"
+	"github.com/shiweii/user"
+	util "github.com/shiweii/utility"
 )
 
 var (
@@ -33,11 +33,13 @@ func init() {
 		}
 	}()
 
-	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*"))
-	// Go routine to verify .env checksum every 5 minutes
+	// Go routine to verify checksum every 10 minutes
 	go util.VerifyCheckSum()
+
+	tpl = template.Must(template.New("").Funcs(fm).ParseGlob("templates/*"))
+
 	// Go Routine to perform encryption if file was left decrypted due to panic
-	go ede.CheckEncryption(util.GetEnvVar("USER_DATA_ENCRYPT"), util.GetEnvVar("USER_DATA"))
+	util.CheckEncryption()
 }
 
 func main() {

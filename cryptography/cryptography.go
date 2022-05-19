@@ -1,35 +1,28 @@
-// Package cryptography implements cryptography for file encryption and decryption
+// Package cryptography implements cryptographic functions
+// and file encryption or decryption.
 package cryptography
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha512"
+	"encoding/hex"
 	"io"
 	"io/ioutil"
 	"os"
 
 	"github.com/shiweii/logger"
-	util "github.com/shiweii/utility"
 )
 
-// CheckEncryption check if file is encrypted.
-// Will perform encryption if file is not encrypted.
-func CheckEncryption(encryptedFile string, decryptedFile string) {
-	_, err := ioutil.ReadFile(encryptedFile)
-	if err != nil {
-		EncryptFile(decryptedFile, encryptedFile)
-	}
-}
-
 // EncryptFile performs AES-256 encryption on file, plaintext file will then be deleted.
-func EncryptFile(path string, resultPath string) {
+func EncryptFile(envKey, path, resultPath string) {
 	plaintext, err := ioutil.ReadFile(path)
 	if err != nil {
 		logger.Error.Println(err)
 	}
 
-	key := []byte(util.GetEnvVar("KEY"))
+	key := []byte(envKey)
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -61,13 +54,13 @@ func EncryptFile(path string, resultPath string) {
 }
 
 // DecryptFile performs AES-256 description on file, encrypted file will then be deleted.
-func DecryptFile(path string, resultPath string) {
+func DecryptFile(envKey, path, resultPath string) {
 	ciphertext, err := ioutil.ReadFile(path)
 	if err != nil {
 		logger.Error.Println(err)
 	}
 
-	key := []byte(util.GetEnvVar("KEY"))
+	key := []byte(envKey)
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -96,4 +89,24 @@ func DecryptFile(path string, resultPath string) {
 	if e != nil {
 		logger.Error.Println(err)
 	}
+}
+
+// ComputeSHA512 computes the SHA512 checksum of a given file.
+func ComputeSHA512(file string) (string, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return "", err
+	}
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			logger.Error.Println(err)
+		}
+	}(f)
+
+	harsher := sha512.New()
+	if _, err := io.Copy(harsher, f); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(harsher.Sum(nil)), nil
 }

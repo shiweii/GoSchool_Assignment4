@@ -1,11 +1,8 @@
-// Package utility implements various functionalities shared between various packages
+// Package utility implements various functionalities shared between various packages.
 package utility
 
 import (
-	"crypto/sha512"
-	"encoding/hex"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -13,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/shiweii/logger"
-
 	"github.com/joho/godotenv"
+	"github.com/shiweii/cryptography"
+	"github.com/shiweii/logger"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -50,7 +47,7 @@ func VerifyCheckSum() {
 		// convert content to a 'string'
 		str := string(logChecksum)
 		// Compute our current log's SHA256 hash
-		hash, err := computeSHA512(GetEnvVar("CHECKSUM_FILE_TO_VERIFY"))
+		hash, err := cryptography.ComputeSHA512(GetEnvVar("CHECKSUM_FILE_TO_VERIFY"))
 		if err != nil {
 			logger.Error.Println(err)
 		} else {
@@ -68,24 +65,16 @@ func VerifyCheckSum() {
 	}
 }
 
-// GetEnvVar computes the SHA512 checksum of a given file.
-func computeSHA512(file string) (string, error) {
-	f, err := os.Open(file)
+// CheckEncryption check if file is encrypted.
+// Will perform encryption if file is not encrypted.
+func CheckEncryption() {
+	_, err := os.Stat(GetEnvVar("USER_DATA_ENCRYPT"))
 	if err != nil {
-		return "", err
-	}
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-			logger.Error.Println(err)
+		if os.IsNotExist(err) {
+			logger.Info.Println("File was not encrypted, proceed to encrypt")
+			cryptography.EncryptFile(GetEnvVar("KEY"), GetEnvVar("USER_DATA"), GetEnvVar("USER_DATA_ENCRYPT"))
 		}
-	}(f)
-
-	harsher := sha512.New()
-	if _, err := io.Copy(harsher, f); err != nil {
-		return "", err
 	}
-	return hex.EncodeToString(harsher.Sum(nil)), nil
 }
 
 // LevenshteinDistance computes and returns
